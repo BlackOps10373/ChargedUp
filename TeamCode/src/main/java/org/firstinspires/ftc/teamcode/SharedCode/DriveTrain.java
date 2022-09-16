@@ -90,7 +90,7 @@ public class DriveTrain {
         brw.setMode(RUN_WITHOUT_ENCODER);
 
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        /*imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -102,7 +102,10 @@ public class DriveTrain {
         }
         targetDegree = getHeading();
         resetTargetDegree = targetDegree;
+         */
     }
+
+
 
     //Move Function For Auto
     public void move(String variation, int ticCount) {
