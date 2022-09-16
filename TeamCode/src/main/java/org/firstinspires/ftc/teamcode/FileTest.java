@@ -9,21 +9,32 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import java.io.File;
 
-@TeleOp(name = "FileTest", group = "TeleOp")
+@TeleOp(name = "FileWriteTest", group = "TeleOp")
 public class FileTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        waitForStart();
         byte t = 1;
 
-        File recordFile = AppUtil.getInstance().getSettingsFile("..\\Movement_Recordings\\RedDuck.txt");
+        File recordFile = AppUtil.getInstance().getSettingsFile("FolderTest.txt");
+
+        float TheFloatIAmWriting = -2.5f;
 
 
-        // Maybe make it a char[] so it is every other 2 char rather than every other 4 bytes
-        byte[] stringBytes = "This is a test string".getBytes();
+        char[] stringBytes = new char[20];
 
-        ReadWriteFile.writeFile(recordFile, stringBytes.toString());
+        int theIntIAmWriting = Float.floatToIntBits(TheFloatIAmWriting);
+        stringBytes[0] =  (char)(theIntIAmWriting & 0x000000ff);
+        stringBytes[1] = (char)((theIntIAmWriting & 0x0000ff00) >> 8);
+        stringBytes[2] = (char)((theIntIAmWriting & 0x00ff0000) >> 16);
+        stringBytes[3] = (char)((theIntIAmWriting & 0xff000000) >> 24);
 
-        telemetry.addData(stringBytes.toString(), 1);
+        String AsString = String.copyValueOf(stringBytes);
+        ReadWriteFile.writeFile(recordFile, AsString);
+
+
+        telemetry.addData("int", stringBytes[0]);
+        telemetry.update();
     }
 }
