@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.util.ReadWriteFile;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 @TeleOp(name = "FileReadTest", group = "TeleOp")
 public class FileReadTest extends LinearOpMode {
@@ -33,23 +35,37 @@ public class FileReadTest extends LinearOpMode {
 
 
         //waitForStart();
-        byte t = 1;
+        byte[] recordingBytes = new byte[2000];
+        recordingBytes[2] = 0;
 
         File recordFile = AppUtil.getInstance().getSettingsFile("FolderTest.txt");
 
-        //float TheFloatIAmWriting = 2.5f;
+        FileInputStream fileInput;
+        try {
+            fileInput = new FileInputStream(recordFile);
+        }
+        catch (java.io.FileNotFoundException exception)
+        {
+            telemetry.addData("failed", "FileNotFound exception");
+            telemetry.update();
+            waitForStart();
+            return;
+        }
 
-        float theFloat = getFloatFromFile(recordFile, 0);
-        /*
-        stringBytes[0] =  (char)(theIntIAmWriting & 0x000000ff);
-        stringBytes[1] = (char)((theIntIAmWriting & 0x0000ff00) >> 8);
-        stringBytes[2] = (char)((theIntIAmWriting & 0x00ff0000) >> 16);
-        stringBytes[3] = (char)((theIntIAmWriting & 0xff000000) >> 24);
-        */
-
-
-        telemetry.addData("int", theFloat);
+        try {
+            fileInput.read(recordingBytes);
+            telemetry.addData("YES", "Read bytes");
+            fileInput.close();
+        }
+        catch (java.io.IOException exception) {
+            telemetry.addData("failed", "Io exception");
+            telemetry.update();
+            waitForStart();
+            return;
+        }
+        telemetry.addData("the value I stored", recordingBytes[2]);
         telemetry.update();
         waitForStart();
+
     }
 }
