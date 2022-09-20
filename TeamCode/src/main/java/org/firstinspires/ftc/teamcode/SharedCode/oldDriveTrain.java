@@ -18,7 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.util.Arrays;
 
-public class DriveTrain {
+public class oldDriveTrain {
     // Declarations of all hardware
     Telemetry telemetry;
     DcMotor lw;
@@ -31,6 +31,17 @@ public class DriveTrain {
     CRServo treadRight;
     BNO055IMU imu;
 
+    // Target Positions of frontTwist and backTwist
+    int frontTargetPosition = 0;
+    int backTargetPosition = 0;
+
+    // Variables for Rock Crawler
+    int frontTwistDelay = 0;
+    int backTwistDelay = 0;
+    boolean isFlipping = false;
+    boolean firstRun = false;
+    boolean forwardFacing = true;
+    int blackCount;
 
     // Variables for Driving
     double lwPower;
@@ -39,6 +50,17 @@ public class DriveTrain {
     double brwPower;
     double speedAdjust = .5;
 
+    // Variables for Gyro
+    double adjSpeed = 0.03; // Mostly unused, but may still be needed
+    double minTurn = 0.01;
+    int windowSize = 3;
+    double targetDegree = 0.0;
+    double resetTargetDegree = 0.0;
+    int piecewiseWindow = 179; // 179 to essentially disable it
+    double piecewiseSpeed = 0.007517647057771725; // This one is the main speed it uses to get to the target degree
+    double piecewiseMinTurn = 0.004;
+    double turnSpeed = 5;
+
     // Lower moveTurnRatio means you turn more when moving (set between 0-1) (1 is 100% turn priority over moving)
     double moveTurnRatio = 0.7;
 
@@ -46,18 +68,18 @@ public class DriveTrain {
 
 
     // Drive Train Constructor
-    public DriveTrain(Telemetry t, DcMotor leftWheel, DcMotor rightWheel, DcMotor backLeftWheel, DcMotor backRightWheel) {
+    public oldDriveTrain(Telemetry t, HardwareMap hardwareMap) {
         telemetry = t;
-        lw = leftWheel;
-        rw = rightWheel;
-        //rw.setDirection(DcMotor.Direction.REVERSE);
-        blw = backLeftWheel;
-        brw = backRightWheel;
-        //blw.setDirection(DcMotor.Direction.REVERSE);
-        //brw.setDirection(DcMotorSimple.Direction.REVERSE);
+        lw = hardwareMap.get(DcMotor.class, "lw");
+        rw = hardwareMap.get(DcMotor.class, "rw");
+        rw.setDirection(DcMotor.Direction.REVERSE);
+        blw = hardwareMap.get(DcMotor.class, "blw");
+        brw = hardwareMap.get(DcMotor.class, "brw");
+        blw.setDirection(DcMotor.Direction.REVERSE);
+        brw.setDirection(DcMotorSimple.Direction.REVERSE);
         lw.setMode(RUN_WITHOUT_ENCODER);
         blw.setMode(RUN_WITHOUT_ENCODER);
-        //rw.setMode(STOP_AND_RESET_ENCODER);
+        rw.setMode(STOP_AND_RESET_ENCODER);
         rw.setMode(RUN_WITHOUT_ENCODER);
         brw.setMode(RUN_WITHOUT_ENCODER);
 
@@ -80,7 +102,7 @@ public class DriveTrain {
 
 
     //Move Function For Auto
-    public void moveCardinals(String variation, int ticCount) {
+    public void move(String variation, int ticCount) {
         int[] ticks = new int[4];
         lw.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rw.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -165,12 +187,47 @@ public class DriveTrain {
         brw.setPower(0);
     }
 
-    void resetPowers()
+    public double degreeCalc(double degree) {
+        double returnDegree = degree;
+        if (returnDegree < 0) {
+            returnDegree = returnDegree + 360;
+
+            return degreeCalc(returnDegree);
+        }
+
+        if (returnDegree >= 360) {
+            returnDegree = returnDegree - 360;
+            return degreeCalc(returnDegree);
+        }
+        return returnDegree;
+
+    }
+
+    public double degreeCalc180(double degree) {
+        double returnDegree = degree;
+        if (returnDegree < -180) {
+            returnDegree = returnDegree + 360;
+            return degreeCalc180(returnDegree);
+        } else if (returnDegree >= 180) {
+            returnDegree = returnDegree - 360;
+            return degreeCalc180(returnDegree);
+        }
+        return returnDegree;
+
+    }
+
+    public void resetPowers()
     {
         lwPower = 0;
         rwPower = 0;
         blwPower = 0;
         brwPower = 0;
+    }
+
+    public double greatest(double a, double b) {
+        // returns the greatest of two numbers
+        return a > b ? a : b;
+        // A warning says this does the same thing as Math.max    Maybe we should use that instead
     }
 
     public void turnPower(double amount) {
@@ -181,7 +238,7 @@ public class DriveTrain {
         brwPower -= amount;
 
         // Preserves the ratios of each wheel, but changes all magnitudes to be 1 or less
-        double a = Math.abs(Math.max(Math.max(Math.abs(lwPower), Math.abs(rwPower)), Math.max(Math.abs(blwPower), Math.abs(brwPower))));
+        double a = Math.abs(greatest(greatest(Math.abs(lwPower), Math.abs(rwPower)), greatest(Math.abs(blwPower), Math.abs(brwPower))));
         if (a > 1) {
             lwPower /= a;
             rwPower /= a;
@@ -190,12 +247,57 @@ public class DriveTrain {
         }
     }
 
-    public void move(double XComponent, double YComponent, double Rotate) {
+    public void gyroStraight() {
+        targetDegree = degreeCalc180(targetDegree);
+
+        // function farther from 0 (targetDegree)
+        if (degreeCalc(getHeading() - targetDegree) > windowSize + piecewiseWindow && degreeCalc(getHeading() - targetDegree) <= 180) {
+            if ((Math.pow(degreeCalc(getHeading() - targetDegree) * adjSpeed, 2)) >= minTurn) {
+                turnPower(-(Math.pow(degreeCalc(getHeading() - targetDegree) * adjSpeed, 2)));
+            } else {
+                turnPower(-minTurn);
+            }
+            //turnPower(-.5);
+
+        }
+        if (degreeCalc(getHeading() - targetDegree) < 360 - windowSize - piecewiseWindow && degreeCalc(getHeading() - targetDegree) > 180) {
+            if ((Math.pow((360 - degreeCalc(getHeading() - targetDegree)) * adjSpeed, 2) >= minTurn)) {
+                turnPower(Math.pow((360 - degreeCalc(getHeading() - targetDegree)) * adjSpeed, 2));
+            } else {
+                turnPower(minTurn);
+            }
+            //turnPower(.5);
+        }
+
+        // (piecewise) the one that is closer to 0 degrees (targetDegree)
+        if (degreeCalc(getHeading() - targetDegree) > windowSize && degreeCalc(getHeading() - targetDegree) <= piecewiseWindow + windowSize) {
+            if ((Math.sqrt(degreeCalc(getHeading() - targetDegree) * piecewiseSpeed)) >= minTurn) {
+                turnPower(-(Math.sqrt(degreeCalc(getHeading() - targetDegree) * piecewiseSpeed)));
+            } else {
+                turnPower(-minTurn);
+            }
+            //turnPower(-.1);
+        }
+        if (degreeCalc(getHeading() - targetDegree) < 360 - windowSize && degreeCalc(getHeading() - targetDegree) > 360 - piecewiseWindow - windowSize) {
+            if (Math.sqrt((360 - degreeCalc(getHeading() - targetDegree)) * piecewiseSpeed) >= minTurn) {
+                turnPower((Math.sqrt((360 - degreeCalc(getHeading() - targetDegree)) * piecewiseSpeed) + piecewiseMinTurn));
+            } else {
+                turnPower(minTurn);
+            }
+            //turnPower(.1);
+        }
+    }
+
+    public double getHeading() {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return -angles.firstAngle;
+    }
+
+    public void move(double YComponent, double XComponent, double Rotate) {
         double driveTurn = -Rotate;
         double XCoordinate = XComponent;
         double YCoordinate = -YComponent;
 
-        /*
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
         double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
         gamepadDegree = degreeCalc180(gamepadDegree);
@@ -214,11 +316,24 @@ public class DriveTrain {
         brw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
         lw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
         blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
-        */
+    }
+    public void setEveryMove(double YComponent, double XComponent, double Rotate, double ticks, DcMotor wheel, LinearOpMode opMode, int armUpDown, int armRotation, ObjectGrab objectGrab)
+    {
+        // If you want more precise control over movement, use the normal move function in your own while loop
 
-        rw.setPower(YCoordinate - XCoordinate - driveTurn);
-        lw.setPower(YCoordinate + XCoordinate + driveTurn);
-        blw.setPower(YCoordinate + XCoordinate - driveTurn);
-        brw.setPower(YCoordinate - XCoordinate + driveTurn);
+        objectGrab.safeArmMovement(armUpDown, armRotation);
+        // The distance in not in any established units
+        double distanceTraveled = 0;
+
+        int startTicks = wheel.getCurrentPosition();
+        while(distanceTraveled < ticks && opMode.opModeIsActive())
+        {
+            telemetry.addData("ticks", wheel.getCurrentPosition());
+            telemetry.update();
+
+            move(YComponent, XComponent, Rotate);
+            distanceTraveled = Math.abs(wheel.getCurrentPosition() - startTicks);
+            objectGrab.armMovementCheck();
+        }
     }
 }
