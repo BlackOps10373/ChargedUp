@@ -9,28 +9,23 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.File;
 
-@TeleOp(name = "FileWriteTest", group = "TeleOp")
-public class FileWriteTest extends LinearOpMode {
+@TeleOp(name = "RecordInputs", group = "TeleOp")
+public class RecordInputs extends LinearOpMode {
 
-    @Override
-    public void runOpMode() {
-        waitForStart();
-        byte[] recordingBytes = new byte[2000];
-        recordingBytes[2] = 64;
-        recordingBytes[0] = 0;
-        recordingBytes[1] = 0;
+    byte[] recordingBytes = new byte[2000];
 
-        File recordFile = AppUtil.getInstance().getSettingsFile("FolderTest/ThisShouldBeInAFolderCalledFolderTest");
-
+    boolean recordBytesToFile(File fileToRecordTo)
+    {
+        // returns false on fail
         FileOutputStream fileOutput;
         try {
-            fileOutput = new FileOutputStream(recordFile);
+            fileOutput = new FileOutputStream(fileToRecordTo);
         }
         catch (java.io.FileNotFoundException exception)
         {
             telemetry.addData("failed", "Io exception");
             telemetry.update();
-            return;
+            return false;
         }
 
         try {
@@ -44,7 +39,20 @@ public class FileWriteTest extends LinearOpMode {
         {
             telemetry.addData("failed", "Io exception");
             telemetry.update();
-            return;
+            return false;
         }
+        return true;
+    }
+
+    @Override
+    public void runOpMode() {
+        waitForStart();
+        recordingBytes[2] = 64;
+        recordingBytes[0] = 0;
+        recordingBytes[1] = 0;
+
+        File recordFile = AppUtil.getInstance().getSettingsFile("RecordedInputs.txt");
+
+        recordBytesToFile(recordFile);
     }
 }
