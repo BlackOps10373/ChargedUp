@@ -16,27 +16,17 @@ public class FirstTest extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        DcMotor lw = hardwareMap.get(DcMotor.class, "lw");
-        DcMotor rw = hardwareMap.get(DcMotor.class, "rw");
-        rw.setDirection(DcMotor.Direction.REVERSE);
-        DcMotor blw = hardwareMap.get(DcMotor.class, "blw");
-        DcMotor brw = hardwareMap.get(DcMotor.class, "brw");
 
-        brw.setDirection(DcMotorSimple.Direction.REVERSE);
-        lw.setMode(RUN_WITHOUT_ENCODER);
-        blw.setMode(RUN_WITHOUT_ENCODER);
-        rw.setMode(STOP_AND_RESET_ENCODER);
-        rw.setMode(RUN_WITHOUT_ENCODER);
-        brw.setMode(RUN_WITHOUT_ENCODER);
-        DriveTrain driveTrain = new DriveTrain(telemetry, lw, rw, blw, brw);
+        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
+        driveTrain.initMotors();
 
         waitForStart();
         while (opModeIsActive())
         {
-            lw.setPower(gamepad1.left_stick_y / 2);
-            rw.setPower(gamepad1.left_stick_y / 2);
-            blw.setPower(gamepad1.left_stick_y / 2);
-            brw.setPower(gamepad1.left_stick_y / 2);
+            driveTrain.lw.setPower(gamepad1.left_stick_y / 2);
+            driveTrain.rw.setPower(gamepad1.left_stick_y / 2);
+            driveTrain.blw.setPower(gamepad1.left_stick_y / 2);
+            driveTrain.brw.setPower(gamepad1.left_stick_y / 2);
             //driveTrain.move(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
         }
     }

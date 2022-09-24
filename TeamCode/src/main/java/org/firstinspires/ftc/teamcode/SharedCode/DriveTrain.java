@@ -21,10 +21,11 @@ import java.util.Arrays;
 public class DriveTrain {
     // Declarations of all hardware
     Telemetry telemetry;
-    DcMotor lw;
-    DcMotor rw;
-    DcMotor blw;
-    DcMotor brw;
+    HardwareMap hardwareMap;
+    public DcMotor lw;
+    public DcMotor rw;
+    public DcMotor blw;
+    public DcMotor brw;
     DcMotor frontTwist;
     DcMotor backTwist;
     CRServo treadLeft;
@@ -44,23 +45,10 @@ public class DriveTrain {
 
     double moveSpeed = (7.0 / 10);
 
-
     // Drive Train Constructor
-    public DriveTrain(Telemetry t, DcMotor leftWheel, DcMotor rightWheel, DcMotor backLeftWheel, DcMotor backRightWheel) {
+    public DriveTrain(Telemetry t,HardwareMap hM) {
         telemetry = t;
-        lw = leftWheel;
-        rw = rightWheel;
-        //rw.setDirection(DcMotor.Direction.REVERSE);
-        blw = backLeftWheel;
-        brw = backRightWheel;
-        //blw.setDirection(DcMotor.Direction.REVERSE);
-        //brw.setDirection(DcMotorSimple.Direction.REVERSE);
-        lw.setMode(RUN_WITHOUT_ENCODER);
-        blw.setMode(RUN_WITHOUT_ENCODER);
-        //rw.setMode(STOP_AND_RESET_ENCODER);
-        rw.setMode(RUN_WITHOUT_ENCODER);
-        brw.setMode(RUN_WITHOUT_ENCODER);
-
+        hardwareMap = hM;
 
         /*imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -76,6 +64,53 @@ public class DriveTrain {
         resetTargetDegree = targetDegree;
          */
     }
+
+    public void initMotors()
+    {
+        // Default settings
+        lw = hardwareMap.get(DcMotor.class, "lw");
+        rw = hardwareMap.get(DcMotor.class, "rw");
+        blw = hardwareMap.get(DcMotor.class, "blw");
+        brw = hardwareMap.get(DcMotor.class, "brw");
+
+        rw.setDirection(DcMotor.Direction.REVERSE);
+        brw.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        lw.setMode(STOP_AND_RESET_ENCODER);
+        rw.setMode(STOP_AND_RESET_ENCODER);
+        blw.setMode(STOP_AND_RESET_ENCODER);
+        brw.setMode(STOP_AND_RESET_ENCODER);
+        lw.setMode(RUN_WITHOUT_ENCODER);
+        blw.setMode(RUN_WITHOUT_ENCODER);
+        rw.setMode(RUN_WITHOUT_ENCODER);
+        brw.setMode(RUN_WITHOUT_ENCODER);
+    }
+    public void initMotors(DcMotor.RunMode lwMode, DcMotorSimple.Direction lwDirection,
+    DcMotor.RunMode rwMode, DcMotorSimple.Direction rwDirection,
+    DcMotor.RunMode blwMode, DcMotorSimple.Direction blwDirection,
+    DcMotor.RunMode brwMode, DcMotorSimple.Direction brwDirection)
+    {
+        // Overload for specific settings
+        lw = hardwareMap.get(DcMotor.class, "lw");
+        rw = hardwareMap.get(DcMotor.class, "rw");
+        blw = hardwareMap.get(DcMotor.class, "blw");
+        brw = hardwareMap.get(DcMotor.class, "brw");
+
+        lw.setMode(STOP_AND_RESET_ENCODER);
+        rw.setMode(STOP_AND_RESET_ENCODER);
+        blw.setMode(STOP_AND_RESET_ENCODER);
+        brw.setMode(STOP_AND_RESET_ENCODER);
+        lw.setMode(lwMode);
+        rw.setMode(rwMode);
+        blw.setMode(blwMode);
+        brw.setMode(brwMode);
+
+        lw.setDirection(lwDirection);
+        rw.setDirection(rwDirection);
+        brw.setDirection(brwDirection);
+    }
+
+
 
 
 
