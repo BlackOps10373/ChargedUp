@@ -10,50 +10,60 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+import java.nio.ByteBuffer;
+
 @TeleOp(name = "FileReadTest", group = "TeleOp")
 public class FileReadTest extends LinearOpMode {
 
-    int combine4Bytes(char c1, char c2, char c3, char c4)
+    int sizeOfArray = 2000;
+
+    boolean setByteArrayToFile(File file, byte[] bytes)
     {
-        return (int)c1 | ((int)c2 << 8) | ((int)c3 << 16) | ((int)c4 << 24);
+        FileOutputStream fileOutput;
+        try {
+            fileOutput = new FileOutputStream(file);
+        }
+        catch (java.io.FileNotFoundException exception)
+        {
+            telemetry.addData("failed", "Io exception");
+            telemetry.update();
+            return false;
+        }
+
+        try {
+            fileOutput.write(bytes);
+            telemetry.addData("YES", "Wrote bytes");
+            fileOutput.flush(); // remember to call flush. It does not work without it.
+            fileOutput.close();
+            telemetry.update();
+        }
+        catch (java.io.IOException exception)
+        {
+            telemetry.addData("failed", "Io exception");
+            telemetry.update();
+            return false;
+        }
+        return true;
     }
 
-    float getFloatFromFile(File file, int offsetFloatNumber)
+    byte[] getByteArrayFromFile(File file)
     {
-        // Example of how I kind of want the file data functions to work
-        offsetFloatNumber *= 4;
-        String AsString = ReadWriteFile.readFile(file);
-        char[] stringBytes = AsString.toCharArray();
-
-        int theIntFloatBits = combine4Bytes(stringBytes[offsetFloatNumber], stringBytes[offsetFloatNumber + 1], stringBytes[offsetFloatNumber + 2], stringBytes[offsetFloatNumber + 3]);
-
-        return Float.intBitsToFloat(theIntFloatBits);
-    }
-
-    @Override
-    public void runOpMode() {
-
-
-        //waitForStart();
-        byte[] recordingBytes = new byte[2000];
-        recordingBytes[2] = 0;
-
-        File recordFile = AppUtil.getInstance().getSettingsFile("FolderTest.txt");
+        byte[] bytes = new byte[sizeOfArray];
 
         FileInputStream fileInput;
         try {
-            fileInput = new FileInputStream(recordFile);
+            fileInput = new FileInputStream(file);
         }
         catch (java.io.FileNotFoundException exception)
         {
             telemetry.addData("failed", "FileNotFound exception");
             telemetry.update();
             waitForStart();
-            return;
+            return bytes;
         }
 
         try {
-            fileInput.read(recordingBytes);
+            fileInput.read(bytes);
             telemetry.addData("YES", "Read bytes");
             fileInput.close();
         }
@@ -61,9 +71,71 @@ public class FileReadTest extends LinearOpMode {
             telemetry.addData("failed", "Io exception");
             telemetry.update();
             waitForStart();
-            return;
+            return bytes;
         }
-        telemetry.addData("the value I stored", recordingBytes[2]);
+        return bytes;
+    }
+
+
+
+    byte[] separateIntTo4Bytes(int theInt)
+    {
+        byte[] eachByte = new byte[4];
+        eachByte[0] = (byte) (theInt & 0x000000ff);
+        eachByte[1] = (byte) (theInt & 0x0000ff00);
+        eachByte[2] = (byte) (theInt & 0x00ff0000);
+        eachByte[3] = (byte) (theInt & 0xff000000);
+        return eachByte;
+    }
+
+    float getFloatFromByteArray(byte[] bytes, int offsetFloatNumber)
+    {
+        // Example of how I kind of want the file data functions to work
+        offsetFloatNumber *= 4;
+
+        telemetry.addData("inputBytes", bytes);
+
+        ByteBuffer bB = ByteBuffer.wrap(bytes, offsetFloatNumber, 4);
+        float returnFloat = bB.getFloat(0);
+        telemetry.addData("getFloat", returnFloat);
+        return returnFloat;
+
+    }
+
+    void setFloatInByteArray(byte[] bytes, float f, int offsetFloatNumber)
+    {
+        // Example of how I kind of want the file data functions to work
+        offsetFloatNumber *= 4;
+
+        byte[] bytesOfFloat = separateIntTo4Bytes(Float.floatToIntBits(f));
+        bytes[offsetFloatNumber] = bytesOfFloat[0];
+        bytes[offsetFloatNumber + 1] = bytesOfFloat[1];
+        bytes[offsetFloatNumber + 2] = bytesOfFloat[2];
+        bytes[offsetFloatNumber + 3] = bytesOfFloat[3];
+    }
+
+    @Override
+    public void runOpMode() {
+
+
+        //waitForStart();
+
+        File recordFile = AppUtil.getInstance().getSettingsFile("FolderTest.txt");
+
+        byte[] recordingBytes = getByteArrayFromFile(recordFile);
+
+        //byte[] recordingBytes = new byte[20];
+        ByteBuffer byteBuffer = ByteBuffer.wrap(recordingBytes, 0, recordingBytes.length);
+
+        //byteBuffer.putFloat(0, 2.0f);
+
+        //byteBuffer.putFloat(4, 2.1f);
+
+        //setByteArrayToFile(recordFile, recordingBytes);
+
+
+        telemetry.addData("the value in 0", byteBuffer.getFloat(0));
+        telemetry.addData("the value in 1", byteBuffer.getFloat(4));
         telemetry.update();
         waitForStart();
 
