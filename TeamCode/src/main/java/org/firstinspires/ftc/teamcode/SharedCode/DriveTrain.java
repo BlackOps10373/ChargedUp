@@ -111,9 +111,6 @@ public class DriveTrain {
     }
 
 
-
-
-
     //Move Function For Auto
     public void moveCardinals(String variation, int ticCount) {
         int[] ticks = new int[4];
