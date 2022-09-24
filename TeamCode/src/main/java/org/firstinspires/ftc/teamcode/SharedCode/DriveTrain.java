@@ -225,7 +225,7 @@ public class DriveTrain {
     public void move(double XComponent, double YComponent, double Rotate) {
         double driveTurn = -Rotate;
         double XCoordinate = XComponent;
-        double YCoordinate = -YComponent;
+        double YCoordinate = YComponent;
 
         /*
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
@@ -250,7 +250,7 @@ public class DriveTrain {
 
         rw.setPower(YCoordinate - XCoordinate - driveTurn);
         lw.setPower(YCoordinate + XCoordinate + driveTurn);
-        blw.setPower(YCoordinate + XCoordinate - driveTurn);
-        brw.setPower(YCoordinate - XCoordinate + driveTurn);
+        blw.setPower(YCoordinate - XCoordinate - driveTurn);
+        brw.setPower(YCoordinate + XCoordinate + driveTurn);
     }
 }
