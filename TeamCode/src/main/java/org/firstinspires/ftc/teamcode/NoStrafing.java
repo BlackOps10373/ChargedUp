@@ -1,18 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
-import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
-import org.firstinspires.ftc.teamcode.SharedCode.oldDriveTrain;
 
-@TeleOp(name = "TeleOp", group = "TeleOp")
-public class FirstTest extends LinearOpMode {
+@TeleOp(name = "NoStrafing", group = "TeleOp")
+public class NoStrafing extends LinearOpMode {
 
     @Override
     public void runOpMode() {

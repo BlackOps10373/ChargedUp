@@ -84,7 +84,7 @@ public class oldDriveTrain {
         brw.setMode(RUN_WITHOUT_ENCODER);
 
 
-        /*imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -96,7 +96,7 @@ public class oldDriveTrain {
         }
         targetDegree = getHeading();
         resetTargetDegree = targetDegree;
-         */
+
     }
 
 
@@ -296,7 +296,7 @@ public class oldDriveTrain {
     public void move(double YComponent, double XComponent, double Rotate) {
         double driveTurn = -Rotate;
         double XCoordinate = XComponent;
-        double YCoordinate = -YComponent;
+        double YCoordinate = YComponent;
 
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
         double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
@@ -311,12 +311,27 @@ public class oldDriveTrain {
         //by finding the adjacent side, we can get our needed x value to power our motors
         double gamepadYControl = Math.cos(Math.toRadians(movementDegree)) * gamepadHypot;
         //by finding the opposite side, we can get our needed y value to power our motors
+        rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
 
+        /*
         rw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
         brw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
         lw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
         blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
+    */
     }
+
+    public void setWheelsToPowers()
+    {
+        lw.setPower(lwPower);
+        rw.setPower(rwPower);
+        blw.setPower(blwPower);
+        brw.setPower(brwPower);
+    }
+
     public void setEveryMove(double YComponent, double XComponent, double Rotate, double ticks, DcMotor wheel, LinearOpMode opMode, int armUpDown, int armRotation, ObjectGrab objectGrab)
     {
         // If you want more precise control over movement, use the normal move function in your own while loop
