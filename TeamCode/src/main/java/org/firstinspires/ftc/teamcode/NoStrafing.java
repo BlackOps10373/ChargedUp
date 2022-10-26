@@ -18,10 +18,10 @@ public class NoStrafing extends LinearOpMode {
         while (opModeIsActive())
         {
             
-            driveTrain.lw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.rw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.blw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.brw.setPower(gamepad1.left_stick_y / 2);
+            driveTrain.lw.setPower(-gamepad1.left_stick_y / 2);
+            driveTrain.rw.setPower(-gamepad1.left_stick_y / 2);
+            driveTrain.blw.setPower(-gamepad1.left_stick_y / 2);
+            driveTrain.brw.setPower(-gamepad1.left_stick_y / 2);
 
 
             //driveTrain.move(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);

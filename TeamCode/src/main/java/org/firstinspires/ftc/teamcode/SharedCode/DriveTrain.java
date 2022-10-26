@@ -222,35 +222,45 @@ public class DriveTrain {
         }
     }
 
+    Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+    public double getHeading() {
+        return -angles.firstAngle;
+    }
+
     public void move(double XComponent, double YComponent, double Rotate) {
         double driveTurn = Rotate;
         double XCoordinate = XComponent;
         double YCoordinate = -YComponent; // The stick outputs up as negative, so this changes it to positive
 
-        double leftStickHypot = 0.0;
-        double gamepadDegree = 0.0;
+        double gamepadHypot = 0.0; // magnitude of the vector
+        double gamepadAngleRad = 0.0; // angle (in radians) of the vector
         if(Math.abs(XCoordinate) == 1.0 || Math.abs(YCoordinate) == 1.0)
         {
-            leftStickHypot = 1.0;
+            // for undoing stick snapping the best I can:
+            gamepadHypot = 1.0;
             if(Math.abs(XCoordinate) == 1.0)
             {
                 // XCoordinate is likely not actually 1.0, so we use the other cord to get the degree
-                gamepadDegree = Math.toDegrees(Math.asin(YCoordinate /* / 1*/));
+                gamepadAngleRad = Math.asin(YCoordinate /* / 1*/);
             }
             if(Math.abs(YCoordinate) == 1.0)
             {
                 // YCoordinate is likely not actually 1.0, so we use the other cord to get the degree
-                gamepadDegree = 90 + Math.toDegrees(Math.asin(XCoordinate /* / 1*/));
+                gamepadAngleRad = 90 + Math.asin(XCoordinate /* / 1*/);
             }
         }
         else
         {
-            leftStickHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
-            gamepadDegree = Math.toDegrees(Math.atan2(YCoordinate, XCoordinate));
+            gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
+            gamepadAngleRad = Math.atan2(YCoordinate, XCoordinate);
         }
-        gamepadDegree = getDegreeInRange_PosNeg180(gamepadDegree);
+        gamepadAngleRad = getDegreeInRange_PosNeg180(gamepadAngleRad);
+        double robotDegree = getHeading();
+        double movementDegree = gamepadAngleRad - robotDegree;
 
-        // finish setting up the headless. I made it to the part where I get the robotDegree
+        // get the new coordinates for the vector after the angle is adjusted
+        double newYCoord = Math.sin(movementDegree) * gamepadHypot;
+        double newXCoord = Math.cos(movementDegree) * gamepadHypot;
 
         /*
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
@@ -273,21 +283,22 @@ public class DriveTrain {
         blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
         */
 
-        lw.setPower(YCoordinate + XCoordinate + driveTurn);
-        rw.setPower(YCoordinate - XCoordinate - driveTurn);
-        blw.setPower(YCoordinate - XCoordinate + driveTurn);
-        brw.setPower(YCoordinate + XCoordinate - driveTurn);
+        lw.setPower(newYCoord + newXCoord + driveTurn);
+        rw.setPower(newYCoord - newXCoord - driveTurn);
+        blw.setPower(newYCoord - newXCoord + driveTurn);
+        brw.setPower(newYCoord + newXCoord - driveTurn);
     }
 
     double getDegreeInRange_PosNeg180(double degree)
     {
         double returnDegree = degree;
-        if (returnDegree < -180) {
-            returnDegree = returnDegree + 360;
-            return getDegreeInRange_PosNeg180(returnDegree);
-        } else if (returnDegree >= 180) {
-            returnDegree = returnDegree - 360;
-            return getDegreeInRange_PosNeg180(returnDegree);
+
+        while (returnDegree < -180 || returnDegree >= 180) {
+            if (returnDegree < -180) {
+                returnDegree = returnDegree + 360;
+            } else if (returnDegree >= 180) {
+                returnDegree = returnDegree - 360;
+            }
         }
         return returnDegree;
     }
