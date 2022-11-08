@@ -50,7 +50,7 @@ public class DriveTrain {
         telemetry = t;
         hardwareMap = hM;
 
-        /*imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -60,9 +60,9 @@ public class DriveTrain {
             telemetry.addData("isCalibrating", "isCalibrating");
             telemetry.update();
         }
-        targetDegree = getHeading();
-        resetTargetDegree = targetDegree;
-         */
+        //targetDegree = getHeading();
+        //resetTargetDegree = targetDegree;
+
     }
 
     public void initMotors()
@@ -233,6 +233,10 @@ public class DriveTrain {
         double XCoordinate = XComponent;
         double YCoordinate = -YComponent; // The stick outputs up as negative, so this changes it to positive
 
+        double newYCoord = YCoordinate;
+        double newXCoord = XCoordinate;
+
+        /*
         double gamepadHypot = 0.0; // magnitude of the vector
         double gamepadAngleRad = 0.0; // angle (in radians) of the vector
         if(Math.abs(XCoordinate) == 1.0 || Math.abs(YCoordinate) == 1.0)
@@ -242,12 +246,12 @@ public class DriveTrain {
             if(Math.abs(XCoordinate) == 1.0)
             {
                 // XCoordinate is likely not actually 1.0, so we use the other cord to get the degree
-                gamepadAngleRad = Math.asin(YCoordinate /* / 1*/);
+                gamepadAngleRad = Math.asin(YCoordinate);
             }
             if(Math.abs(YCoordinate) == 1.0)
             {
                 // YCoordinate is likely not actually 1.0, so we use the other cord to get the degree
-                gamepadAngleRad = 90 + Math.asin(XCoordinate /* / 1*/);
+                gamepadAngleRad = 90 + Math.asin(XCoordinate);
             }
         }
         else
