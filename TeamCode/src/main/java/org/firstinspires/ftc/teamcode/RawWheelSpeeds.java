@@ -33,6 +33,7 @@ public class RawWheelSpeeds extends LinearOpMode {
             driveTrain.brw.setPower(gamepad1.left_stick_y / 2);
 */
 
+            //telemetry.update();
             driveTrain.move(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
         }
     }
