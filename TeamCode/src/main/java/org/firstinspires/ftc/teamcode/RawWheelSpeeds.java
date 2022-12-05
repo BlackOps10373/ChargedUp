@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
 
@@ -12,7 +14,14 @@ public class RawWheelSpeeds extends LinearOpMode {
     public void runOpMode() {
 
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
-        driveTrain.initMotors();
+        driveTrain.initMotors(DcMotor.RunMode.RUN_USING_ENCODER,
+                DcMotorSimple.Direction.FORWARD,
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                DcMotorSimple.Direction.REVERSE,
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                DcMotorSimple.Direction.FORWARD,
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         while (opModeIsActive())
