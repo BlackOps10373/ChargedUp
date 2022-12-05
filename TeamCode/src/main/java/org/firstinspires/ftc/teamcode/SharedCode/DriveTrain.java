@@ -22,10 +22,9 @@ public class DriveTrain {
     // Declarations of all hardware
     Telemetry telemetry;
     HardwareMap hardwareMap;
-    public DcMotor lw;
-    public DcMotor rw;
-    public DcMotor blw;
-    public DcMotor brw;
+    // Declare Your DcMotors For Drive Train Here
+    public DcMotor lw, rw, blw, brw;
+
     DcMotor frontTwist;
     DcMotor backTwist;
     CRServo treadLeft;
@@ -49,6 +48,10 @@ public class DriveTrain {
     public DriveTrain(Telemetry t,HardwareMap hM) {
         telemetry = t;
         hardwareMap = hM;
+        initMotor(lw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
+        initMotor(rw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
+        initMotor(blw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
+        initMotor(brw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -65,6 +68,12 @@ public class DriveTrain {
 
     }
 
+    public void initMotor(DcMotor MotorName, DcMotor.Direction Direction, DcMotor.RunMode RunMode){
+        MotorName = hardwareMap.get(DcMotor.class, MotorName.toString());
+        MotorName.setDirection(Direction);
+        MotorName.setMode(RunMode);
+    }
+
     public void initMotors()
     {
         // Default settings
@@ -74,7 +83,7 @@ public class DriveTrain {
         brw = hardwareMap.get(DcMotor.class, "brw");
 
         lw.setDirection(DcMotor.Direction.REVERSE);
-        blw.setDirection(DcMotorSimple.Direction.REVERSE);
+        blw.setDirection(DcMotorSimple.Direction.FORWARD);
 
         lw.setMode(STOP_AND_RESET_ENCODER);
         rw.setMode(STOP_AND_RESET_ENCODER);
