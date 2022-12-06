@@ -3,12 +3,15 @@ package org.firstinspires.ftc.teamcode.SharedCode;
 public class Button {
     // for abstracting button management
     // TODO: find a way to store a reference to a bool so the button does not have to be in every function parameter
-    Button() {}
+    public Button() {
+
+    }
+
 
     boolean wasPressed = false;
     boolean toggle = false;
 
-    boolean OnButtonDown(boolean button)
+    public boolean OnButtonDown(boolean button)
     {
         boolean ret = false;
         if (!wasPressed)
@@ -21,7 +24,7 @@ public class Button {
         return ret;
     }
 
-    boolean OnButtonUp(boolean button)
+    public boolean OnButtonUp(boolean button)
     {
         boolean ret = false;
         if (wasPressed)
@@ -33,12 +36,12 @@ public class Button {
         return ret;
     }
 
-    boolean OnToggleOn(boolean button)
+    public boolean OnToggleOn()
     {
         return toggle;
     }
 
-    boolean OnToggleOff(boolean button)
+    public boolean OnToggleOff()
     {
         return !toggle;
     }
