@@ -72,6 +72,7 @@ public class DriveTrain {
         MotorName = hardwareMap.get(DcMotor.class, MotorName.toString());
         MotorName.setDirection(Direction);
         MotorName.setMode(RunMode);
+        MotorName.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void initMotors()
@@ -81,6 +82,8 @@ public class DriveTrain {
         rw = hardwareMap.get(DcMotor.class, "rw");
         blw = hardwareMap.get(DcMotor.class, "blw");
         brw = hardwareMap.get(DcMotor.class, "brw");
+
+
 
         lw.setDirection(DcMotor.Direction.REVERSE);
         blw.setDirection(DcMotorSimple.Direction.FORWARD);
