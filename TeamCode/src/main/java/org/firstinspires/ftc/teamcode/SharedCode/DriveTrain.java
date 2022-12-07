@@ -72,6 +72,7 @@ public class DriveTrain {
         MotorName = hardwareMap.get(DcMotor.class, MotorName.toString());
         MotorName.setDirection(Direction);
         MotorName.setMode(RunMode);
+        MotorName.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void initMotors()
@@ -81,6 +82,8 @@ public class DriveTrain {
         rw = hardwareMap.get(DcMotor.class, "rw");
         blw = hardwareMap.get(DcMotor.class, "blw");
         brw = hardwareMap.get(DcMotor.class, "brw");
+
+
 
         lw.setDirection(DcMotor.Direction.REVERSE);
         blw.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -93,6 +96,11 @@ public class DriveTrain {
         blw.setMode(RUN_WITHOUT_ENCODER);
         rw.setMode(RUN_WITHOUT_ENCODER);
         brw.setMode(RUN_WITHOUT_ENCODER);
+
+        lw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        blw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        brw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
     public void initMotors(DcMotor.RunMode lwMode, DcMotorSimple.Direction lwDirection,
     DcMotor.RunMode rwMode, DcMotorSimple.Direction rwDirection,
@@ -117,6 +125,11 @@ public class DriveTrain {
         lw.setDirection(lwDirection);
         rw.setDirection(rwDirection);
         brw.setDirection(brwDirection);
+
+        lw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        blw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        brw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
 
