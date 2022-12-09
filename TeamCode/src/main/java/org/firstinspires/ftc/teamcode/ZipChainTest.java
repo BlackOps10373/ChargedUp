@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.SharedCode.Button;
 
@@ -18,6 +19,9 @@ import java.util.Arrays;
         @Override
         public void runOpMode() {
 
+
+            Servo Grabber = hardwareMap.get(Servo.class, "grabber");
+            Grabber.setPosition(0);
             DcMotor zipChainLeft = hardwareMap.get(DcMotor.class, "zipChainLeft");
             zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -60,6 +64,9 @@ import java.util.Arrays;
                         }
                         zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    }
+                    if(gamepad1.b) {
+                        Grabber.setPosition(.08);
                     }
                     zipChainLeft.setPower(gamepad1.right_stick_y);
                     zipChainRight.setPower(gamepad1.right_stick_y);
