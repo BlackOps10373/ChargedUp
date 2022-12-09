@@ -24,45 +24,54 @@ import java.util.Arrays;
             DcMotor zipChainRight = hardwareMap.get(DcMotor.class, "zipChainRight");
             zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            zipChainRight.setDirection(DcMotorSimple.Direction.REVERSE);
+            zipChainLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
 
             waitForStart();
             while (opModeIsActive())
             {
-                if(gamepad1.a) {
-                    int[] ticks = new int[2];
-                    zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    if(gamepad1.a) {
+                        int[] ticks = new int[2];
+                        zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-                    zipChainLeft.setTargetPosition(-5000);
-                    zipChainRight.setTargetPosition(-5000);
-                    zipChainLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    zipChainRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        zipChainLeft.setTargetPosition(-2500);
+                        zipChainRight.setTargetPosition(-2500);
+                        zipChainLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        zipChainRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                    while (zipChainLeft.isBusy() || zipChainRight.isBusy()) {
+                        while (zipChainLeft.isBusy() || zipChainRight.isBusy()) {
 
-                        ticks[0] = Math.abs(zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition());
-                        ticks[1] = Math.abs(zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition());
-                        Arrays.sort(ticks);
 
-                        zipChainLeft.setPower(Math.abs(zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition()) / ticks[1]);
-                        zipChainRight.setPower(Math.abs(zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition()) / ticks[1]);
+                            ticks[0] = Math.abs(zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition());
+                            ticks[1] = Math.abs(zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition());
+                            Arrays.sort(ticks);
 
-                        zipChainLeft.setPower(0);
-                        zipChainRight.setPower(0);
+                            zipChainLeft.setPower((zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition()) * 1.0 / ticks[1]);
+                            zipChainRight.setPower((zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition()) * 1.0 / ticks[1]);
+
+                            telemetry.addData("left ticks:", zipChainLeft.getCurrentPosition());
+                            telemetry.addData("right ticks:", zipChainRight.getCurrentPosition());
+                            telemetry.addData("ticks[1]", zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition());
+                            telemetry.addData("left power:", (zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition()) / ticks[1]);
+                            telemetry.addData("right power:", (zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition()) / ticks[1]);
+                            telemetry.update();
+                        }
+                        zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     }
-
-                }
-
-
-
-                zipChainLeft.setPower(gamepad1.right_stick_y);
-                zipChainRight.setPower(gamepad1.right_stick_y);
-                telemetry.addData("Top Tick:", zipChainLeft.getCurrentPosition());
-                telemetry.addData("Bottom Tick:", zipChainRight.getCurrentPosition());
+                    zipChainLeft.setPower(gamepad1.right_stick_y);
+                    zipChainRight.setPower(gamepad1.right_stick_y);
+                telemetry.addData("left power:", gamepad1.right_stick_y);
+                telemetry.addData("right power:", gamepad1.right_stick_y);
                 telemetry.update();
+
+
+
+                //zipChainLeft.setPower(gamepad1.right_stick_y);
+                //zipChainRight.setPower(gamepad1.right_stick_y);
+
 
                /* //zipChain.setPower(gamepad1.right_stick_y);
 
