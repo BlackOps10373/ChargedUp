@@ -6,35 +6,51 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "RawWheelSpeeds", group = "TeleOp")
-public class RawWheelSpeeds extends LinearOpMode {
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+
+@Autonomous(name = "RawWheelSpeeds", group = "Auto")
+public class RawWheelSpeeds extends LinearOpMode
+{
 
     @Override
-    public void runOpMode() {
+    public void runOpMode()
+    {
 
-        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
-        driveTrain.initMotors(DcMotor.RunMode.RUN_USING_ENCODER,
-                DcMotorSimple.Direction.FORWARD,
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                DcMotorSimple.Direction.REVERSE,
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                DcMotorSimple.Direction.FORWARD,
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                DcMotorSimple.Direction.REVERSE);
+        PowerPlayConeDetection detector = new PowerPlayConeDetection(telemetry);
+        detector.logiCam = hardwareMap.get(WebcamName.class, "logiCam");
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        detector.camera = OpenCvCameraFactory.getInstance().createWebcam(detector.logiCam);
+        detector.camera.setPipeline(detector);
+        detector.camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            //camera.pauseViewport() and webcam.resumeViewport()
+
+            @Override
+            public void onOpened ()
+            {
+                // Usually this is where you'll want to start streaming from the camera (see section 4)
+                detector.camera.startStreaming(320, 240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            }
+            @Override
+            public void onError ( int errorCode)
+            {
+
+            }
+        });
+
 
         waitForStart();
         while (opModeIsActive())
         {
-            /*
-            driveTrain.lw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.rw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.blw.setPower(gamepad1.left_stick_y / 2);
-            driveTrain.brw.setPower(gamepad1.left_stick_y / 2);
-*/
 
-            //telemetry.update();
-            driveTrain.move(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
         }
     }
 }
