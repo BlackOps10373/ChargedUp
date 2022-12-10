@@ -21,6 +21,8 @@ public class MainTeleOp extends LinearOpMode {
         waitForStart();
         while (opModeIsActive())
         {
+            telemetry.addData("gh:", driveTrain.getHeading());
+            telemetry.update();
 
             if (gamepad1.dpad_up)
                 ails.grabber.setPosition(0.08);
@@ -41,14 +43,18 @@ public class MainTeleOp extends LinearOpMode {
                 ails.tics = (100);
 
             if (!(gamepad1.right_stick_y < 0 && (ails.touchSensorLeft.isPressed() || ails.touchSensorRight.isPressed())))
-                ails.tics += gamepad1.right_stick_y * 10;
+                ails.tics += gamepad1.right_stick_y * 40;
 
             ails.zip(ails.tics + ails.offsetLeft, ails.tics + ails.offsetRight);
 
             ails.zipChainLeft.setPower(ails.zipChainLeftPower);
             ails.zipChainRight.setPower(ails.zipChainRightPower);
 
-            driveTrain.move(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            //driveTrain.rw.setPower(-gamepad1.left_stick_y);
+            //driveTrain.brw.setPower(-gamepad1.left_stick_y);
+            //driveTrain.lw.setPower(-gamepad1.left_stick_y);
+            //driveTrain.blw.setPower(-gamepad1.left_stick_y);
+            driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             //driveTrain.gyroStraight();
 
 

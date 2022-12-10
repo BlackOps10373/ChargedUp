@@ -71,7 +71,7 @@ public class DriveTrain {
         brw = hardwareMap.get(DcMotor.class, "brw");
 
         lw.setDirection(DcMotor.Direction.REVERSE);
-        blw.setDirection(DcMotorSimple.Direction.FORWARD);
+        blw.setDirection(DcMotorSimple.Direction.REVERSE);
 
         lw.setMode(STOP_AND_RESET_ENCODER);
         rw.setMode(STOP_AND_RESET_ENCODER);
@@ -108,7 +108,7 @@ public class DriveTrain {
     public void move(double YComponent, double XComponent, double Rotate) {
         double driveTurn = -Rotate;
         double XCoordinate = XComponent;
-        double YCoordinate = YComponent;
+        double YCoordinate = -YComponent;
 
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
         double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
