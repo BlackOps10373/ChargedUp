@@ -25,10 +25,6 @@ public class DriveTrain {
     // Declare Your DcMotors For Drive Train Here
     public DcMotor lw, rw, blw, brw;
 
-    DcMotor frontTwist;
-    DcMotor backTwist;
-    CRServo treadLeft;
-    CRServo treadRight;
     BNO055IMU imu;
 
 
@@ -48,10 +44,8 @@ public class DriveTrain {
     public DriveTrain(Telemetry t,HardwareMap hM) {
         telemetry = t;
         hardwareMap = hM;
-        initMotor(lw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
-        initMotor(rw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
-        initMotor(blw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
-        initMotor(brw, DcMotor.Direction.FORWARD, DcMotor.RunMode.RUN_USING_ENCODER);
+
+        initMotors();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -68,13 +62,6 @@ public class DriveTrain {
 
     }
 
-    public void initMotor(DcMotor MotorName, DcMotor.Direction Direction, DcMotor.RunMode RunMode){
-        MotorName = hardwareMap.get(DcMotor.class, MotorName.toString());
-        MotorName.setDirection(Direction);
-        MotorName.setMode(RunMode);
-        MotorName.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-    }
-
     public void initMotors()
     {
         // Default settings
@@ -82,8 +69,6 @@ public class DriveTrain {
         rw = hardwareMap.get(DcMotor.class, "rw");
         blw = hardwareMap.get(DcMotor.class, "blw");
         brw = hardwareMap.get(DcMotor.class, "brw");
-
-
 
         lw.setDirection(DcMotor.Direction.REVERSE);
         blw.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -102,36 +87,69 @@ public class DriveTrain {
         blw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         brw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
-    public void initMotors(DcMotor.RunMode lwMode, DcMotorSimple.Direction lwDirection,
-    DcMotor.RunMode rwMode, DcMotorSimple.Direction rwDirection,
-    DcMotor.RunMode blwMode, DcMotorSimple.Direction blwDirection,
-    DcMotor.RunMode brwMode, DcMotorSimple.Direction brwDirection)
-    {
-        // Overload for specific settings
-        lw = hardwareMap.get(DcMotor.class, "lw");
-        rw = hardwareMap.get(DcMotor.class, "rw");
-        blw = hardwareMap.get(DcMotor.class, "blw");
-        brw = hardwareMap.get(DcMotor.class, "brw");
 
-        lw.setMode(STOP_AND_RESET_ENCODER);
-        rw.setMode(STOP_AND_RESET_ENCODER);
-        blw.setMode(STOP_AND_RESET_ENCODER);
-        brw.setMode(STOP_AND_RESET_ENCODER);
-        lw.setMode(lwMode);
-        rw.setMode(rwMode);
-        blw.setMode(blwMode);
-        brw.setMode(brwMode);
+    public void turnPower(double amount) {
 
-        lw.setDirection(lwDirection);
-        rw.setDirection(rwDirection);
-        brw.setDirection(brwDirection);
+        lwPower += amount;
+        rwPower -= amount;
+        blwPower += amount;
+        brwPower -= amount;
 
-        lw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        blw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        brw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        // Preserves the ratios of each wheel, but changes all magnitudes to be 1 or less
+        double a = Math.abs(Math.max(Math.max(Math.abs(lwPower), Math.abs(rwPower)), Math.max(Math.abs(blwPower), Math.abs(brwPower))));
+        if (a > 1) {
+            lwPower /= a;
+            rwPower /= a;
+            blwPower /= a;
+            brwPower /= a;
+        }
     }
 
+    public void move(double YComponent, double XComponent, double Rotate) {
+        double driveTurn = -Rotate;
+        double XCoordinate = XComponent;
+        double YCoordinate = YComponent;
+
+        double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
+        double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
+        gamepadDegree = degreeCalc180(gamepadDegree);
+        //the inverse tangent of opposite/adjacent gives us our gamepad degree
+        double robotDegree = getHeading();
+        //gives us the angle our robot is at
+        double movementDegree = gamepadDegree - robotDegree;
+
+        //adjust the angle we need to move at by finding needed movement degree based on gamepad and robot angles
+        double gamepadXControl = Math.sin(Math.toRadians(movementDegree)) * gamepadHypot;
+        //by finding the adjacent side, we can get our needed x value to power our motors
+        double gamepadYControl = Math.cos(Math.toRadians(movementDegree)) * gamepadHypot;
+        //by finding the opposite side, we can get our needed y value to power our motors
+        rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+
+        rw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
+        brw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
+        lw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
+        blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
+    }
+
+    public double getHeading() {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return -angles.firstAngle;
+    }
+
+    public double degreeCalc180(double degree) {
+        double returnDegree = degree;
+        if (returnDegree < -180) {
+            returnDegree = returnDegree + 360;
+            return degreeCalc180(returnDegree);
+        } else if (returnDegree >= 180) {
+            returnDegree = returnDegree - 360;
+            return degreeCalc180(returnDegree);
+        }
+        return returnDegree;
+    }
 
     //Move Function For Auto
     public void moveCardinals(String variation, int ticCount) {
@@ -219,38 +237,7 @@ public class DriveTrain {
         brw.setPower(0);
     }
 
-    void resetPowers()
-    {
-        lwPower = 0;
-        rwPower = 0;
-        blwPower = 0;
-        brwPower = 0;
-    }
-
-    public void turnPower(double amount) {
-
-        lwPower += amount;
-        rwPower -= amount;
-        blwPower += amount;
-        brwPower -= amount;
-
-        // Preserves the ratios of each wheel, but changes all magnitudes to be 1 or less
-        double a = Math.abs(Math.max(Math.max(Math.abs(lwPower), Math.abs(rwPower)), Math.max(Math.abs(blwPower), Math.abs(brwPower))));
-        if (a > 1) {
-            lwPower /= a;
-            rwPower /= a;
-            blwPower /= a;
-            brwPower /= a;
-        }
-    }
-
-    public double getHeading() {
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-        return -angles.firstAngle;
-    }
-
-    public void move(double XComponent, double YComponent, double Rotate) {
+    /*public void move(double XComponent, double YComponent, double Rotate) {
         double driveTurn = Rotate;
         double XCoordinate = XComponent;
         double YCoordinate = -YComponent; // The stick outputs up as negative, so this changes it to positive
@@ -258,7 +245,7 @@ public class DriveTrain {
         double newYCoord = YCoordinate;
         double newXCoord = XCoordinate;
 
-        /*
+
         double gamepadHypot = 0.0; // magnitude of the vector
         double gamepadAngleRad = 0.0; // angle (in radians) of the vector
         if(Math.abs(XCoordinate) == 1.0 || Math.abs(YCoordinate) == 1.0)
@@ -289,7 +276,7 @@ public class DriveTrain {
         double newYCoord = Math.sin(movementDegree) * gamepadHypot;
         double newXCoord = Math.cos(movementDegree) * gamepadHypot;
 
-        /*
+
         double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
         double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
         gamepadDegree = degreeCalc180(gamepadDegree);
@@ -308,12 +295,12 @@ public class DriveTrain {
         brw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
         lw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
         blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
-        */
 
-        lw.setPower(newYCoord + newXCoord + driveTurn);
-        rw.setPower(newYCoord - newXCoord - driveTurn);
-        blw.setPower(newYCoord - newXCoord + driveTurn);
-        brw.setPower(newYCoord + newXCoord - driveTurn);
+
+        //lw.setPower(newYCoord + newXCoord + driveTurn);
+        //rw.setPower(newYCoord - newXCoord - driveTurn);
+        //blw.setPower(newYCoord - newXCoord + driveTurn);
+        //brw.setPower(newYCoord + newXCoord - driveTurn);
     }
 
     double getDegreeInRange_PosNeg180(double degree)
@@ -328,5 +315,5 @@ public class DriveTrain {
             }
         }
         return returnDegree;
-    }
+    }*/
 }
