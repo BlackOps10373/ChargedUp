@@ -36,7 +36,7 @@ public class AILS {
             zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft")
+            touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft");
             touchSensorRight = hardwareMap.get(TouchSensor.class, "touchSensorRight");
         }
 
