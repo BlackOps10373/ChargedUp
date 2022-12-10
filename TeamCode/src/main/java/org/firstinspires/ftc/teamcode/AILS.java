@@ -13,7 +13,6 @@ import java.util.Arrays;
 public class AILS {
         Telemetry telemetry;
 
-
         Servo grabber;
 
         DcMotor zipChainLeft;
@@ -25,17 +24,24 @@ public class AILS {
 
         public AILS (Telemetry t, HardwareMap hardwareMap){
             telemetry   = t;
+
+            grabber = hardwareMap.get(Servo.class, "grabber");
+            grabber.setPosition(0);
+
             zipChainLeft  = hardwareMap.get(DcMotor.class, "zipChainLeft");
+            zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
             zipChainRight   = hardwareMap.get(DcMotor.class, "zipChainRight");
-            touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft");
+            zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft")
             touchSensorRight = hardwareMap.get(TouchSensor.class, "touchSensorRight");
         }
 
         public void zipUp (int tics) {
             int[] ticks = new int[2];
-            zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
             zipChainLeft.setTargetPosition(-2500);
             zipChainRight.setTargetPosition(-2500);
             zipChainLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
