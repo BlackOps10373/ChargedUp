@@ -24,6 +24,8 @@ public class FileTest extends LinearOpMode {
         boolean readBack = readFile();
         telemetry.addData("Read back some correctly?", readBack);
         telemetry.update();
+
+        waitForStart();
     }
 }
 

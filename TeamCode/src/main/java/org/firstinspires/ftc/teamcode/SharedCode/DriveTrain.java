@@ -72,6 +72,7 @@ public class DriveTrain {
 
         lw.setDirection(DcMotor.Direction.REVERSE);
         blw.setDirection(DcMotorSimple.Direction.REVERSE);
+        rw.setDirection(DcMotorSimple.Direction.REVERSE);
 
         lw.setMode(STOP_AND_RESET_ENCODER);
         rw.setMode(STOP_AND_RESET_ENCODER);
