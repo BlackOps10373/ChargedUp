@@ -30,7 +30,7 @@ public class MainTeleOp extends LinearOpMode {
             if (gamepad1.dpad_down)
                 ails.grabber.setPosition(0);
 
-            if(gamepad1.a)
+            /*if(gamepad1.a)
                 ails.tics = (-2500);
 
             if(gamepad1.b)
@@ -43,18 +43,19 @@ public class MainTeleOp extends LinearOpMode {
                 ails.tics = (100);
 
             if (!(gamepad1.right_stick_y < 0 && (ails.touchSensorLeft.isPressed() || ails.touchSensorRight.isPressed())))
-                ails.tics += gamepad1.right_stick_y * 40;
+                ails.tics += gamepad1.right_stick_y * 40;*/
 
-            ails.zip(ails.tics + ails.offsetLeft, ails.tics + ails.offsetRight);
+            //ails.zip(ails.tics + ails.offsetLeft, ails.tics + ails.offsetRight);
+            //ails.zipChainLeft.setPower(ails.zipChainLeftPower);
+            //ails.zipChainRight.setPower(ails.zipChainRightPower);
+            ails.zipChainLeft.setPower(gamepad1.right_stick_y);
+            ails.zipChainRight.setPower(gamepad1.right_stick_y);
 
-            ails.zipChainLeft.setPower(ails.zipChainLeftPower);
-            ails.zipChainRight.setPower(ails.zipChainRightPower);
-
-            //driveTrain.rw.setPower(-gamepad1.left_stick_y);
-            //driveTrain.brw.setPower(-gamepad1.left_stick_y);
-            //driveTrain.lw.setPower(-gamepad1.left_stick_y);
-            //driveTrain.blw.setPower(-gamepad1.left_stick_y);
-            driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            driveTrain.rw.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x);
+            driveTrain.brw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x);
+            driveTrain.lw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x);
+            driveTrain.blw.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x);
+            //driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             //driveTrain.gyroStraight();
 
 

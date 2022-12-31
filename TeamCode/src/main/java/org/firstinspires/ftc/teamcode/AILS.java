@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -37,10 +38,13 @@ public class AILS {
             zipChainLeft  = hardwareMap.get(DcMotor.class, "zipChainLeft");
             zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            zipChainLeft.setDirection(DcMotor.Direction.REVERSE);
 
             zipChainRight   = hardwareMap.get(DcMotor.class, "zipChainRight");
             zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            zipChainRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            zipChainLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
             touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft");
             touchSensorRight = hardwareMap.get(TouchSensor.class, "touchSensorRight");
