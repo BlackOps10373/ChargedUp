@@ -23,10 +23,9 @@ import java.util.Arrays;
             Servo Grabber = hardwareMap.get(Servo.class, "grabber");
             Grabber.setPosition(0);
             DcMotor zipChainLeft = hardwareMap.get(DcMotor.class, "zipChainLeft");
-            zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+            zipChainLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             DcMotor zipChainRight = hardwareMap.get(DcMotor.class, "zipChainRight");
-            zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            zipChainRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             zipChainLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -36,7 +35,20 @@ import java.util.Arrays;
             while (opModeIsActive())
             {
                     if(gamepad1.a) {
-                        int[] ticks = new int[2];
+                        Grabber.setPosition(0.08);
+                    }
+                    if(gamepad1.b) {
+                        Grabber.setPosition(0);
+                    }
+                    zipChainLeft.setPower(gamepad1.right_stick_y);
+                    zipChainRight.setPower(gamepad1.right_stick_y);
+                telemetry.addData("left power:", gamepad1.right_stick_y);
+                telemetry.addData("right power:", gamepad1.right_stick_y);
+                telemetry.update();
+
+
+
+                /*int[] ticks = new int[2];
                         zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -64,17 +76,7 @@ import java.util.Arrays;
                         }
                         zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    }
-                    if(gamepad1.b) {
-                        Grabber.setPosition(.08);
-                    }
-                    zipChainLeft.setPower(gamepad1.right_stick_y);
-                    zipChainRight.setPower(gamepad1.right_stick_y);
-                telemetry.addData("left power:", gamepad1.right_stick_y);
-                telemetry.addData("right power:", gamepad1.right_stick_y);
-                telemetry.update();
-
-
+                         */
 
                 //zipChainLeft.setPower(gamepad1.right_stick_y);
                 //zipChainRight.setPower(gamepad1.right_stick_y);

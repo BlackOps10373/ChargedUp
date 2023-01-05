@@ -37,14 +37,17 @@ public class AILS {
 
             zipChainLeft  = hardwareMap.get(DcMotor.class, "zipChainLeft");
             zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            zipChainLeft.setTargetPosition(0);
+            zipChainLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            zipChainLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             zipChainLeft.setDirection(DcMotor.Direction.REVERSE);
 
             zipChainRight   = hardwareMap.get(DcMotor.class, "zipChainRight");
             zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            zipChainRight.setTargetPosition(0);
+            zipChainRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             zipChainRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            zipChainLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
             touchSensorLeft = hardwareMap.get(TouchSensor.class, "touchSensorLeft");
             touchSensorRight = hardwareMap.get(TouchSensor.class, "touchSensorRight");
@@ -62,8 +65,12 @@ public class AILS {
                 ticks[1] = Math.abs(zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition());
                 Arrays.sort(ticks);
 
+                //zipChainLeft.setPower((zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition()) * 1.0 / ticks[1]);
+                //zipChainRight.setPower((zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition()) * 1.0 / ticks[1]);
+                zipChainLeft.setPower(1);
+                zipChainRight.setPower(1);
 
-                if (ticks[0] < 300){
+                /*if (ticks[0] < 300){
                     if(touchSensorLeft.isPressed()) {
                         offsetLeft = zipChainLeft.getCurrentPosition();
                         zipChainLeftPower = 0;
@@ -80,7 +87,7 @@ public class AILS {
                 else {
                     zipChainLeftPower = ((zipChainLeft.getTargetPosition() - zipChainLeft.getCurrentPosition()) * 1.0 / ticks[1]);
                     zipChainRightPower = ((zipChainRight.getTargetPosition() - zipChainRight.getCurrentPosition()) * 1.0 / ticks[1]);
-                }
+                }*/
             }
         }
 

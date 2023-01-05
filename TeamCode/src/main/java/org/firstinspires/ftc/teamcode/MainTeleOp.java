@@ -14,6 +14,8 @@ public class MainTeleOp extends LinearOpMode {
 
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
         AILS ails = new AILS(telemetry,hardwareMap);
+        int leftTics = 0;
+        int rightTics = 0;
         //driveTrain.initMotors();
         telemetry.addData("Calibration:", "Complete");
         telemetry.update();
@@ -48,8 +50,28 @@ public class MainTeleOp extends LinearOpMode {
             //ails.zip(ails.tics + ails.offsetLeft, ails.tics + ails.offsetRight);
             //ails.zipChainLeft.setPower(ails.zipChainLeftPower);
             //ails.zipChainRight.setPower(ails.zipChainRightPower);
-            ails.zipChainLeft.setPower(gamepad1.right_stick_y);
-            ails.zipChainRight.setPower(gamepad1.right_stick_y);
+            leftTics += gamepad1.right_stick_y * 40;
+            if (leftTics < -2800)
+                leftTics = -2800;
+            rightTics += gamepad1.right_stick_y * 40;
+            if (rightTics < -2800)
+                rightTics = -2800;
+
+            ails.zip(leftTics, rightTics);
+
+
+
+
+           /* if(ails.zipChainLeft.getCurrentPosition() > -2800 || gamepad1.right_stick_y > 0)
+                ails.zipChainLeft.setPower(gamepad1.right_stick_y);
+            else
+                ails.zipChainLeft.setPower(0);
+
+            if(ails.zipChainRight.getCurrentPosition() > -2800 || gamepad1.right_stick_y > 0)
+                ails.zipChainRight.setPower(gamepad1.right_stick_y);
+            else
+                ails.zipChainRight.setPower(0); */
+
 
             driveTrain.rw.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x);
             driveTrain.brw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x);
