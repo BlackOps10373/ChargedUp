@@ -135,6 +135,18 @@ public class DriveTrain {
         blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
     }
 
+    public void rawMove(double XComponent, double YComponent, double Rotate)
+    {
+        double driveTurn = Rotate;
+        double XCoordinate = XComponent;
+        double YCoordinate = -YComponent;
+
+        lw.setPower(YCoordinate + XCoordinate + driveTurn);
+        rw.setPower(YCoordinate - XCoordinate - driveTurn);
+        blw.setPower(YCoordinate - XCoordinate + driveTurn);
+        brw.setPower(YCoordinate + XCoordinate - driveTurn);
+    }
+
     public double getHeading() {
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return -angles.firstAngle;

@@ -12,6 +12,13 @@ public class MainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        double leftStickYBefore = 0;
+        double leftStickYAfter = 0;
+        double leftStickXBefore = 0;
+        double leftStickXAfter = 0;
+        double rightStickXBefore = 0;
+        double rightStickXAfter = 0;
+
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
         AILS ails = new AILS(telemetry,hardwareMap);
         int leftTics = 0;
@@ -72,11 +79,23 @@ public class MainTeleOp extends LinearOpMode {
             else
                 ails.zipChainRight.setPower(0); */
 
+            if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0)
+            {
+                leftStickXAfter /= 2;
+                leftStickYAfter /= 2;
+            }
+            else {
+                leftStickYAfter = (gamepad1.left_stick_y * .05) + (leftStickYAfter * .95);
+                leftStickXAfter = (gamepad1.left_stick_x * .05) + (leftStickXAfter * .95);
+                rightStickXAfter = (gamepad1.right_stick_x * .05) + (rightStickXAfter * .95);
+            }
+            driveTrain.rw.setPower(-leftStickYAfter - leftStickXAfter - rightStickXAfter);
+            driveTrain.brw.setPower(-leftStickYAfter + leftStickXAfter - rightStickXAfter);
+            driveTrain.lw.setPower(-leftStickYAfter + leftStickXAfter + rightStickXAfter);
+            driveTrain.blw.setPower(-leftStickYAfter - leftStickXAfter + rightStickXAfter);
 
-            driveTrain.rw.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad1.right_stick_x);
-            driveTrain.brw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad1.right_stick_x);
-            driveTrain.lw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x);
-            driveTrain.blw.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad1.right_stick_x);
+
+
             //driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             //driveTrain.gyroStraight();
 
