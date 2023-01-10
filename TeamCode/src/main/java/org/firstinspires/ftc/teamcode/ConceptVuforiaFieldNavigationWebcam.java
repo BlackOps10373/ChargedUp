@@ -34,18 +34,25 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
+import android.app.ApplicationErrorReport;
+import android.os.BatteryManager;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.BatteryChecker;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotserver.internal.webserver.RobotControllerWebHandlers;
 import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
 
 import java.util.ArrayList;
@@ -111,7 +118,6 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
     private boolean targetVisible       = false;
 
     OpenGLMatrix predictedLocation = OpenGLMatrix.translation(0, 0,0);
-
 
     @Override public void runOpMode() {
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
@@ -190,9 +196,9 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
          *      In this example, it is centered on the robot (left-to-right and front-to-back), and 6 inches above ground level.
          */
 
-        final float CAMERA_FORWARD_DISPLACEMENT  = 0.0f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
-        final float CAMERA_VERTICAL_DISPLACEMENT = 6.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = 0.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
+        final float CAMERA_FORWARD_DISPLACEMENT  = 6.5f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
+        final float CAMERA_VERTICAL_DISPLACEMENT = 5.25f * mmPerInch;   // eg: Camera is 6 Inches above ground
+        final float CAMERA_LEFT_DISPLACEMENT     = -5.75f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
 
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                     .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -220,12 +226,19 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
          * Either press STOP to exit the OpMode, or use the "options menu" again, and select "Camera Stream" to close the preview window.
          */
 
+        boolean moveRealRobot = true;
+        boolean useViewforia = true;
+
         float speed = 0.003f; // (whatever units the matrix uses by default) a second
-        float correcterMult = 0.01f;
+        float correcterMult = 0.1f;
         double lastTime = time;
         OpenGLMatrix LControl_stick_input = null;
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
 
+        //driveTrain.lw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //driveTrain.rw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //driveTrain.blw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //driveTrain.brw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         targets.activate();
         while (!isStopRequested()) {
             double deltaTime = time - lastTime;
@@ -236,18 +249,31 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
             {
                 // Make the controller input into a vector to do vector math
                 VectorF vecLControl = new VectorF(gamepad1.left_stick_x * speed * (float) deltaTime, -gamepad1.left_stick_y * speed * (float) deltaTime, 0);
-                if (vecLControl.magnitude() > 1.0f)
-                    vecLControl = vecLControl.normalized3D(); // clamp the magnitude to 1
+                //if (vecLControl.magnitude() > 1.0f)
+                    //vecLControl = vecLControl.normalized3D(); // clamp the magnitude to 1
 
                 // Convert input vector into a translation matrix to multiply with the robot's transformation matrix
                 LControl_stick_input = OpenGLMatrix.translation(vecLControl.get(0), vecLControl.get(1), vecLControl.get(2));
             }
-            driveTrain.rawMove(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            if (moveRealRobot)
+                driveTrain.rawMove(gamepad1.left_stick_x / 2, gamepad1.left_stick_y / 2, gamepad1.right_stick_x / 2);
+
+            if (gamepad1.a)
+            {
+                moveRealRobot = false;
+                useViewforia = false;
+            }
+            if (gamepad1.b)
+            {
+                moveRealRobot = true;
+                useViewforia = true;
+            }
+
             telemetry.addData("LControl stick magnitude", LControl_stick_input.getTranslation().magnitude());
             telemetry.addData("rawLstickX", gamepad1.right_stick_x);
             telemetry.addData("rawLstickY", gamepad1.left_stick_y);
 
-            if(predictedLocation != null) {
+            if(predictedLocation != null && (LControl_stick_input.getTranslation().magnitude() > 0.1)) {
                 predictedLocation = predictedLocation.multiplied(LControl_stick_input);
             }
             //LControl_stick_input = OpenGLMatrix.rotation(DEGREES,Orientation.getOrientation(predictedLocation,
@@ -256,27 +282,29 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
             // check all the trackable targets to see which one (if any) is visible.
 
             targetVisible = false;
-            for (VuforiaTrackable trackable : allTrackables) {
-                if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                    telemetry.addData("Visible Target", trackable.getName());
-                    targetVisible = true;
+            if (useViewforia) {
+                for (VuforiaTrackable trackable : allTrackables) {
+                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                        telemetry.addData("Visible Target", trackable.getName());
+                        targetVisible = true;
 
-                    // getUpdatedRobotLocation() will return null if no new information is available since
-                    // the last time that call was made, or if the trackable is not currently visible.
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                    if (robotLocationTransform != null) {
+                        // getUpdatedRobotLocation() will return null if no new information is available since
+                        // the last time that call was made, or if the trackable is not currently visible.
+                        OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                        if (robotLocationTransform != null) {
 
 
-                        if (deltaTime < 1.0f && LControl_stick_input.getTranslation().magnitude() > 0.3) // only updated speed if deltaTime is less than 1 second
-                        {
-                            speed = ((robotLocationTransform.getTranslation().subtracted(lastLocation).getTranslation().magnitude())
-                            / (float)deltaTime) / LControl_stick_input.getTranslation().magnitude();
+                            if (deltaTime < 1.0f && LControl_stick_input.getTranslation().magnitude() > 0.3) // only updated speed if deltaTime is less than 1 second
+                            {
+                                speed = ((robotLocationTransform.getTranslation().subtracted(lastLocation).getTranslation().magnitude())
+                                        / (float) deltaTime) / LControl_stick_input.getTranslation().magnitude();
+                            }
+                            lastLocation = robotLocationTransform;
+                            predictedLocation = new OpenGLMatrix(lastLocation);
+                            lastTime = time;
                         }
-                        lastLocation = robotLocationTransform;
-                        predictedLocation = new OpenGLMatrix(lastLocation);
-                        lastTime = time;
+                        break;
                     }
-                    break;
                 }
             }
 

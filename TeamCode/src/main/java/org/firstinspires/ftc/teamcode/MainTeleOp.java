@@ -94,7 +94,7 @@ public class MainTeleOp extends LinearOpMode {
             driveTrain.lw.setPower(-leftStickYAfter + leftStickXAfter + rightStickXAfter);
             driveTrain.blw.setPower(-leftStickYAfter - leftStickXAfter + rightStickXAfter);
 
-
+            driveTrain.move(leftStickYAfter, leftStickXAfter, rightStickXAfter);
 
             //driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             //driveTrain.gyroStraight();
