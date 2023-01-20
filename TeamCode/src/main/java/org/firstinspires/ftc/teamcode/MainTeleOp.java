@@ -33,11 +33,11 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("gh:", driveTrain.getHeading());
             telemetry.update();
 
-            if (gamepad1.dpad_up)
+            /*if (gamepad1.dpad_up)
                 ails.grabber.setPosition(0.08);
 
             if (gamepad1.dpad_down)
-                ails.grabber.setPosition(0);
+                ails.grabber.setPosition(0);*/
 
             /*if(gamepad1.a)
                 ails.tics = (-2500);
@@ -57,14 +57,14 @@ public class MainTeleOp extends LinearOpMode {
             //ails.zip(ails.tics + ails.offsetLeft, ails.tics + ails.offsetRight);
             //ails.zipChainLeft.setPower(ails.zipChainLeftPower);
             //ails.zipChainRight.setPower(ails.zipChainRightPower);
-            leftTics += gamepad1.right_stick_y * 40;
+           /* leftTics += gamepad1.right_stick_y * 40;
             if (leftTics < -2800)
                 leftTics = -2800;
             rightTics += gamepad1.right_stick_y * 40;
             if (rightTics < -2800)
-                rightTics = -2800;
+                rightTics = -2800;*/
 
-            ails.zip(leftTics, rightTics);
+           // ails.zip(leftTics, rightTics);
 
 
 
@@ -79,7 +79,7 @@ public class MainTeleOp extends LinearOpMode {
             else
                 ails.zipChainRight.setPower(0); */
 
-            if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0)
+           /* if (gamepad1.left_stick_x == 0 && gamepad1.left_stick_y == 0)
             {
                 leftStickXAfter /= 2;
                 leftStickYAfter /= 2;
@@ -88,15 +88,15 @@ public class MainTeleOp extends LinearOpMode {
                 leftStickYAfter = (gamepad1.left_stick_y * .05) + (leftStickYAfter * .95);
                 leftStickXAfter = (gamepad1.left_stick_x * .05) + (leftStickXAfter * .95);
                 rightStickXAfter = (gamepad1.right_stick_x * .05) + (rightStickXAfter * .95);
-            }
-            driveTrain.rw.setPower(-leftStickYAfter - leftStickXAfter - rightStickXAfter);
-            driveTrain.brw.setPower(-leftStickYAfter + leftStickXAfter - rightStickXAfter);
-            driveTrain.lw.setPower(-leftStickYAfter + leftStickXAfter + rightStickXAfter);
-            driveTrain.blw.setPower(-leftStickYAfter - leftStickXAfter + rightStickXAfter);
+            }*/
+            //driveTrain.rw.setPower(-leftStickYAfter - leftStickXAfter - rightStickXAfter);
+            //driveTrain.brw.setPower(-leftStickYAfter + leftStickXAfter - rightStickXAfter);
+            //driveTrain.lw.setPower(-leftStickYAfter + leftStickXAfter + rightStickXAfter);
+            //driveTrain.blw.setPower(-leftStickYAfter - leftStickXAfter + rightStickXAfter);
 
-            driveTrain.move(leftStickYAfter, leftStickXAfter, rightStickXAfter);
+            //driveTrain.move(leftStickYAfter, leftStickXAfter, rightStickXAfter);
 
-            //driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            driveTrain.move(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
             //driveTrain.gyroStraight();
 
 

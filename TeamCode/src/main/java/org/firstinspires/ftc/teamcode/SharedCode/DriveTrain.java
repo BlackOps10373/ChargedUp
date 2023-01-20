@@ -124,15 +124,44 @@ public class DriveTrain {
         //by finding the adjacent side, we can get our needed x value to power our motors
         double gamepadYControl = Math.cos(Math.toRadians(movementDegree)) * gamepadHypot;
         //by finding the opposite side, we can get our needed y value to power our motors
-        rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
-        brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
-        lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
-        brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        //rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        //lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        double XComponentPower = gamepadXControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
+        double YComponentPower = gamepadYControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
+        double RotateComponentPower = driveTurn / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
+        rw.setPower((YComponentPower * Math.abs(gamepadYControl)) - (XComponentPower * Math.abs(gamepadXControl)) + (RotateComponentPower * Math.abs(driveTurn)));
+        brw.setPower((YComponentPower * Math.abs(gamepadYControl)) + (XComponentPower * Math.abs(gamepadXControl)) + (RotateComponentPower * Math.abs(driveTurn)));
+        lw.setPower((YComponentPower * Math.abs(gamepadYControl)) + (XComponentPower * Math.abs(gamepadXControl)) - (RotateComponentPower * Math.abs(driveTurn)));
+        blw.setPower((YComponentPower * Math.abs(gamepadYControl)) - (XComponentPower * Math.abs(gamepadXControl)) - (RotateComponentPower * Math.abs(driveTurn)));
+    }
 
-        rw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
-        brw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust);
-        lw.setPower((gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
-        blw.setPower((gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust);
+    public void goToPosition(double YComponent, double XComponent, double speed, double preferredAngle) {
+        double movementspeed = speed;
+        double XCoordinate = XComponent;
+        double YCoordinate = -YComponent;
+
+        double distanceToTarget = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
+        double absoluteAngleToTarget = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
+        absoluteAngleToTarget = degreeCalc180(absoluteAngleToTarget);
+        //the inverse tangent of opposite/adjacent gives us our gamepad degree
+        double robotDegree = getHeading();
+        //gives us the angle our robot is at
+        double relativeAngleToPoint = absoluteAngleToTarget - robotDegree;
+
+        //adjust the angle we need to move at by finding needed movement degree based on gamepad and robot angles
+        double gamepadXControl = Math.sin(Math.toRadians(relativeAngleToPoint)) * distanceToTarget;
+        //by finding the adjacent side, we can get our needed x value to power our motors
+        double gamepadYControl = Math.cos(Math.toRadians(relativeAngleToPoint)) * distanceToTarget;
+        //by finding the opposite side, we can get our needed y value to power our motors
+        //rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
+        //lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
+        double XComponentPower = gamepadXControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl));
+        double YComponentPower = gamepadYControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl));
+        double relativeTurnAngle = relativeAngleToPoint - 180 + preferredAngle;
     }
 
     public void rawMove(double XComponent, double YComponent, double Rotate)
