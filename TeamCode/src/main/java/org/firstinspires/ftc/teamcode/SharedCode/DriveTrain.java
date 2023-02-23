@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode.SharedCode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
+import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -16,51 +19,167 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Vector2D;
+
 import java.util.Arrays;
 
 public class DriveTrain {
-    // Declarations of all hardware
+
+    //DECLARATIONS OF ALL HARDWARE
     Telemetry telemetry;
     HardwareMap hardwareMap;
-    // Declare Your DcMotors For Drive Train Here
+
     public DcMotor lw, rw, blw, brw;
+    public DcMotor leftEncoderMotor, rightEncoderMotor, centerEncoderMotor;
+    public BNO055IMU imu;
 
-    BNO055IMU imu;
-
-
-    // Variables for Driving
+    // DECLARATIONS OF ALL VARIABLES
     double lwPower;
     double rwPower;
     double blwPower;
     double brwPower;
     double speedAdjust = .5;
-
     // Lower moveTurnRatio means you turn more when moving (set between 0-1) (1 is 100% turn priority over moving)
     double moveTurnRatio = 0.7;
-
     double moveSpeed = (7.0 / 10);
 
-    // Drive Train Constructor
+    Orientation angles;
+    private final double ENCODER_TICS_PER_INCH = (8192 / ((35/25.4) * Math.PI)); //in inches
+    private final double RADIUS = 6; //in inches
+    private final double CENTER_ENCODER_RADIUS = 6;
+
+    public static final double oneRotationTicks = 8000;
+    public static final double wheelRadius = 0.0175; // in meters
+    public static final double wheelDistanceApart = 0.3; // in meters
+
+    private int currentLeftEncoder = 0;
+    private int currentRightEncoder = 0;
+    private int currentCenterEncoder = 0;
+
+    private int previousLeftEncoder = 0;
+    private int previousRightEncoder = 0;
+    private int previousCenterEncoder = 0;
+
+    private int deltaLeftEncoder = 0;
+    private int deltaRightEncoder = 0;
+    private int deltaCenterEncoder = 0;
+
+    private double heading = 0;
+    private double deltaHeading = 0;
+
+    private double deltax = 0;
+    private double deltay = 0;
+
+    public double fieldDeltaX = 0;
+    public double fieldDeltaY = 0;
+
+    Vector2D robotCentricDelta;
+    Vector2D fieldCentricDelta;
+    Vector2D position = new Vector2D(0,0);
+    private double x = 0;
+    private double y = 0;
+    private double theta = 0;
+
+
+    // CONSTRUCTOR
     public DriveTrain(Telemetry t,HardwareMap hM) {
         telemetry = t;
         hardwareMap = hM;
 
         initMotors();
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.mode = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.loggingEnabled = false;
-        imu.initialize(parameters);
-        while (!imu.isGyroCalibrated()) {
-            telemetry.addData("isCalibrating", "isCalibrating");
-            telemetry.update();
-        }
+        initIMU();
         //targetDegree = getHeading();
         //resetTargetDegree = targetDegree;
+    }
+
+    public void headlessDrive(double yInput, double xInput, double rotateInput){
+        double initY = yInput;
+        double initX = xInput;
+        double initRotate = rotateInput;
+
 
     }
+
+    public void updatePosition(){
+        updateEncoders();
+
+        deltaLeftEncoder = currentLeftEncoder - previousLeftEncoder;
+        deltaRightEncoder = currentRightEncoder - previousRightEncoder;
+        deltaCenterEncoder = currentCenterEncoder - previousCenterEncoder;
+
+        previousLeftEncoder = currentLeftEncoder;
+        previousRightEncoder = currentRightEncoder;
+        previousCenterEncoder = currentCenterEncoder;
+
+        deltaHeading = (deltaRightEncoder - deltaLeftEncoder) / (2.0 * RADIUS * ENCODER_TICS_PER_INCH);
+        heading = (currentRightEncoder - currentLeftEncoder) / (2.0 * RADIUS * ENCODER_TICS_PER_INCH);
+
+        if(deltaHeading == 0){ //have to do it like this because java doesn't do l'Hopital's rule
+            deltax = deltaCenterEncoder;
+            deltay = (deltaLeftEncoder + deltaRightEncoder)/2;
+        }else{
+            double turnRadius = RADIUS * ENCODER_TICS_PER_INCH * (deltaLeftEncoder + deltaRightEncoder) / (deltaRightEncoder - deltaLeftEncoder);
+            double strafeRadius = deltaCenterEncoder / deltaHeading - CENTER_ENCODER_RADIUS * ENCODER_TICS_PER_INCH;
+
+            deltax = turnRadius*(Math.cos(deltaHeading) - 1) + strafeRadius*Math.sin(deltaHeading);
+            deltay = turnRadius*Math.sin(deltaHeading) + strafeRadius*(1 - Math.cos(deltaHeading));
+            x += encoderToInch(deltax);
+            y += encoderToInch(deltay);
+        }
+        encoderToFieldConversion(deltax, deltay);
+        fieldCentricDelta = new Vector2D(encoderToInch(fieldDeltaX), encoderToInch(fieldDeltaY));
+        robotCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
+
+        //fieldCentricDelta = new Vector2D(encoderToInch(deltay), encoderToInch(-deltax));
+        //fieldCentricDelta.rotate(heading);
+        position.add(fieldCentricDelta);
+    }
+
+    public void updateEncoders(){
+        currentLeftEncoder = -leftEncoderMotor.getCurrentPosition();
+        currentRightEncoder = rightEncoderMotor.getCurrentPosition();
+        currentCenterEncoder = -centerEncoderMotor.getCurrentPosition();
+    }
+
+    public double encoderToInch(double encoder) {
+        return encoder/ENCODER_TICS_PER_INCH;
+    }
+
+    public void encoderToFieldConversion(double robotDeltaX, double robotDeltaY){
+        fieldDeltaX = robotDeltaX*Math.cos(getHeading()) + robotDeltaY*Math.cos(getHeading() + Math.PI/2);
+        fieldDeltaY = robotDeltaX*Math.sin(getHeading()) + robotDeltaY*Math.sin(getHeading() + Math.PI/2);
+    }
+
+    public double getHeading(){
+        return heading;
+    }
+    public Vector2D getPosition(){
+        return position;
+    }
+    /*public void updateControllerValues() {
+        leftStick.setComponents(new double[] {gamepad1.left_stick_x, -gamepad1.left_stick_y});
+        rightStick.setComponents(new double[] {gamepad1.right_stick_x, -gamepad1.right_stick_y});
+        Agobot.drivetrain.updatePosition();
+        leftStick.rotate(Math.toRadians(driverHeading - Agobot.drivetrain.getHeading()));
+        double leftx = leftStick.getComponent(0);
+        double lefty = leftStick.getComponent(1);
+        double scalar = Math.max(Math.abs(lefty-leftx), Math.abs(lefty+leftx)); //scalar and magnitude scale the motor powers based on distance from joystick origin
+        double magnitude = Math.sqrt(Math.pow(lefty, 2) + Math.pow(leftx, 2));
+
+        motorSpeeds = new Vector2D((lefty+leftx)*magnitude/scalar, (lefty-leftx)*magnitude/scalar);
+    }
+    public void rotate(double radians) {
+
+        theta = (theta + radians) % (2 * Math.PI);
+        genComp();
+    }
+    public void genComp() {
+        components = new double[2];
+
+        components[0] = R * Math.cos(theta);
+        components[1] = R * Math.sin(theta);
+    }
+*/
 
     public void initMotors()
     {
@@ -70,24 +189,110 @@ public class DriveTrain {
         blw = hardwareMap.get(DcMotor.class, "blw");
         brw = hardwareMap.get(DcMotor.class, "brw");
 
-        lw.setDirection(DcMotor.Direction.REVERSE);
-        blw.setDirection(DcMotorSimple.Direction.REVERSE);
-        rw.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftEncoderMotor = hardwareMap.get(DcMotor.class, "lw");
+        rightEncoderMotor = hardwareMap.get(DcMotor.class, "blw");
+        centerEncoderMotor = hardwareMap.get(DcMotor.class, "rw");
 
-        lw.setMode(STOP_AND_RESET_ENCODER);
-        rw.setMode(STOP_AND_RESET_ENCODER);
-        blw.setMode(STOP_AND_RESET_ENCODER);
-        brw.setMode(STOP_AND_RESET_ENCODER);
+        leftEncoderMotor.setDirection(FORWARD);
+        rightEncoderMotor.setDirection(FORWARD);
+        centerEncoderMotor.setDirection(REVERSE);
+
+        leftEncoderMotor.setMode(STOP_AND_RESET_ENCODER);
+        rightEncoderMotor.setMode(STOP_AND_RESET_ENCODER);
+        centerEncoderMotor.setMode(STOP_AND_RESET_ENCODER);
+        leftEncoderMotor.setMode(RUN_WITHOUT_ENCODER);
+        rightEncoderMotor.setMode(RUN_WITHOUT_ENCODER);
+        centerEncoderMotor.setMode(RUN_WITHOUT_ENCODER);
+
+        lw.setDirection(FORWARD);
+        rw.setDirection(REVERSE);
+        blw.setDirection(FORWARD);
+        brw.setDirection(REVERSE);
+
         lw.setMode(RUN_WITHOUT_ENCODER);
-        blw.setMode(RUN_WITHOUT_ENCODER);
         rw.setMode(RUN_WITHOUT_ENCODER);
+        blw.setMode(RUN_WITHOUT_ENCODER);
         brw.setMode(RUN_WITHOUT_ENCODER);
 
-        lw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        blw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        brw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lw.setZeroPowerBehavior(BRAKE);
+        rw.setZeroPowerBehavior(BRAKE);
+        blw.setZeroPowerBehavior(BRAKE);
+        brw.setZeroPowerBehavior(BRAKE);
     }
+
+    public void initIMU(){
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.mode = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.loggingEnabled = false;
+        imu.initialize(parameters);
+    }
+
+
+    /*public void resetTicks() {
+        resetLeftTicks();
+        resetCenterTicks();
+        resetRightTicks();
+    }
+    public void resetLeftTicks() {
+        leftEncoderPos = leftEncoderMotor.getCurrentPosition();
+    }
+    public int getLeftTicks() {
+        return -(leftEncoderMotor.getCurrentPosition() - leftEncoderPos);
+    }
+    public void resetRightTicks() {
+        rightEncoderPos = rightEncoderMotor.getCurrentPosition();
+    }
+    public int getRightTicks() {
+        return rightEncoderMotor.getCurrentPosition() - rightEncoderPos;
+    }
+    public void resetCenterTicks() {
+        centerEncoderPos = centerEncoderMotor.getCurrentPosition();
+    }
+    public int getCenterTicks() {
+        return -(centerEncoderMotor.getCurrentPosition() - centerEncoderPos);
+    }*/
+
+   /* public void updatePosition() {
+        deltaLeftDistance = (getLeftTicks() / oneRotationTicks) * 2.0 * Math.PI * wheelRadius;
+        deltaRightDistance = (getRightTicks() / oneRotationTicks) * 2.0 * Math.PI * wheelRadius;
+        deltaCenterDistance = (getCenterTicks() / oneRotationTicks) * 2.0 * Math.PI * wheelRadius;
+        x  += (((deltaLeftDistance + deltaRightDistance) / 2.0)) * Math.cos(theta);
+        y  += (((deltaLeftDistance + deltaRightDistance) / 2.0)) * Math.sin(theta);
+        theta  += (deltaLeftDistance - deltaRightDistance) / wheelDistanceApart;
+        resetTicks();
+    }*/
+    public double getX() {
+        return x;
+    }
+    public double getY() {
+        return y;
+    }
+    public double getTheta() {
+        return theta;
+    }
+    public void setX(double _x) {
+        x = _x;
+    }
+    public void setY(double _y) {
+        y = _y;
+    }
+    public void setTheta(double _theta) {
+        theta = _theta;
+    }
+    public double angle() {
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle);
+    }
+
+
+
+
+
+
+
+
 
     public void turnPower(double amount) {
 
@@ -107,7 +312,7 @@ public class DriveTrain {
     }
 
     public void move(double YComponent, double XComponent, double Rotate) {
-        double driveTurn = -Rotate;
+        double driveTurn = Rotate;
         double XCoordinate = XComponent;
         double YCoordinate = -YComponent;
 
@@ -115,7 +320,7 @@ public class DriveTrain {
         double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
         gamepadDegree = degreeCalc180(gamepadDegree);
         //the inverse tangent of opposite/adjacent gives us our gamepad degree
-        double robotDegree = getHeading();
+        double robotDegree = (degreeCalc180(-getHeading()*180));
         //gives us the angle our robot is at
         double movementDegree = gamepadDegree - robotDegree;
 
@@ -128,13 +333,13 @@ public class DriveTrain {
         //brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
         //lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
         //brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
-        double XComponentPower = gamepadXControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
-        double YComponentPower = gamepadYControl / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
-        double RotateComponentPower = driveTurn / (Math.abs(gamepadYControl) + Math.abs(gamepadXControl) + Math.abs(driveTurn));
-        rw.setPower((YComponentPower * Math.abs(gamepadYControl)) - (XComponentPower * Math.abs(gamepadXControl)) + (RotateComponentPower * Math.abs(driveTurn)));
-        brw.setPower((YComponentPower * Math.abs(gamepadYControl)) + (XComponentPower * Math.abs(gamepadXControl)) + (RotateComponentPower * Math.abs(driveTurn)));
-        lw.setPower((YComponentPower * Math.abs(gamepadYControl)) + (XComponentPower * Math.abs(gamepadXControl)) - (RotateComponentPower * Math.abs(driveTurn)));
-        blw.setPower((YComponentPower * Math.abs(gamepadYControl)) - (XComponentPower * Math.abs(gamepadXControl)) - (RotateComponentPower * Math.abs(driveTurn)));
+        double XComponentPower = gamepadXControl / 1.5;
+        double YComponentPower = gamepadYControl / 1.5;
+        double RotateComponentPower = driveTurn / 1.5;
+        rw.setPower((YComponentPower - XComponentPower - RotateComponentPower));
+        brw.setPower((YComponentPower + XComponentPower - RotateComponentPower));
+        lw.setPower((YComponentPower + XComponentPower + RotateComponentPower));
+        blw.setPower((YComponentPower - XComponentPower + RotateComponentPower));
     }
 
     public void goToPosition(double YComponent, double XComponent, double speed, double preferredAngle) {
@@ -176,7 +381,7 @@ public class DriveTrain {
         brw.setPower(YCoordinate + XCoordinate - driveTurn);
     }
 
-    public double getHeading() {
+   public double getIMUHeading() {
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return -angles.firstAngle;
     }
