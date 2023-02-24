@@ -123,15 +123,16 @@ public class DriveTrain {
 
             deltax = turnRadius*(Math.cos(deltaHeading) - 1) + strafeRadius*Math.sin(deltaHeading);
             deltay = turnRadius*Math.sin(deltaHeading) + strafeRadius*(1 - Math.cos(deltaHeading));
-            x += encoderToInch(deltax);
-            y += encoderToInch(deltay);
+
         }
-        encoderToFieldConversion(deltax, deltay);
-        fieldCentricDelta = new Vector2D(encoderToInch(fieldDeltaX), encoderToInch(fieldDeltaY));
+        x += encoderToInch(deltax);
+        y += encoderToInch(deltay);
+        //encoderToFieldConversion(deltax, deltay);
+        //fieldCentricDelta = new Vector2D(encoderToInch(fieldDeltaX), encoderToInch(fieldDeltaY));
         robotCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
 
-        //fieldCentricDelta = new Vector2D(encoderToInch(deltay), encoderToInch(-deltax));
-        //fieldCentricDelta.rotate(heading);
+        fieldCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
+        fieldCentricDelta.rotate(heading);
         position.add(fieldCentricDelta);
     }
 
