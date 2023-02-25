@@ -11,24 +11,34 @@ import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
 @TeleOp(name = "RedSideTeleOp", group = "TeleOp")
 public class RedSideTeleOp extends LinearOpMode {
 
-    public Vector2D leftStick;
-    public Vector2D rightStick;
-    public Vector2D motorSpeeds;
-
 
     @Override
     public void runOpMode() {
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap, DriveTrain.Alliance.Red);
+        AILS ails = new AILS(telemetry, hardwareMap);
 
-        GraphManager graphManager = new GraphManager();
+        boolean dpadUp = false;
+        boolean dpadDown = false;
+        boolean dpadLeft = false;
+        boolean dpadRight = false;
+
+        double InitialYComponent = 0;
+        double InitialXComponent = 0;
+
+        int currentTargetX = 0;
+        int currentTargetY = 0;
+
+        int leftTics = 0;
+        int rightTics = 0;
+        int leftOffset = 0;
+        int rightOffset = 0;
+
         //while (!driveTrain.imu.isGyroCalibrated()) {
             telemetry.addLine("Robot Is Initializing: DO NOT START");
             telemetry.update();
         //}
         telemetry.addLine("Initialization Complete: Ready To Start");
         telemetry.update();
-
-        graphManager.PlacePoint(23,23,4);
 
         waitForStart();
         //leftStick = new Vector2D((double) gamepad1.left_stick_x, (double) -gamepad1.left_stick_y);
@@ -41,6 +51,9 @@ public class RedSideTeleOp extends LinearOpMode {
             telemetry.addData("LeftEncoder", driveTrain.leftEncoderMotor.getCurrentPosition());
             telemetry.addData("RightEncoder", driveTrain.rightEncoderMotor.getCurrentPosition());
             telemetry.addData("CenterEncoder", driveTrain.centerEncoderMotor.getCurrentPosition());
+            telemetry.addData("right Chain", ails.zipChainRight.getCurrentPosition());
+            telemetry.addData("left Chain", ails.zipChainLeft.getCurrentPosition());
+
 
             telemetry.addData("Y value", driveTrain.getY());
             telemetry.addData("X value", driveTrain.getX());
@@ -54,9 +67,72 @@ public class RedSideTeleOp extends LinearOpMode {
                     gamepad1.rumble(400);
                 }
             }
-            graphManager.getPoint(time);
-            driveTrain.move((graphManager.getYOfPoint() - driveTrain.getPosition().getComponent(1))
-                    * 0.3, (graphManager.getXOfPoint() - driveTrain.getPosition().getComponent(0)) * 0.3, 0);
+
+            if (gamepad1.b)
+                ails.grabber.setPosition(.6);
+            if (gamepad1.x)
+                ails.grabber.setPosition(.5);
+
+            if (gamepad1.dpad_up && !dpadUp) {
+                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX, currentTargetY + 24);
+                currentTargetY += 24;
+                driveTrain.finalArrayPointInit++;
+                dpadUp = true;
+            } else if (!gamepad1.dpad_up)
+                dpadUp = false;
+
+            if (gamepad1.dpad_down && !dpadDown) {
+                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX, currentTargetY - 24);
+                currentTargetY -= 24;
+                driveTrain.finalArrayPointInit++;
+                dpadDown = true;
+            } else if (!gamepad1.dpad_down)
+                dpadDown = false;
+
+            if (gamepad1.dpad_right && !dpadRight) {
+                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX + 24, currentTargetY);
+                currentTargetX += 24;
+                driveTrain.finalArrayPointInit++;
+                dpadRight = true;
+            } else if (!gamepad1.dpad_right)
+                dpadRight = false;
+
+            if (gamepad1.dpad_left && !dpadLeft) {
+                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX - 24, currentTargetY);
+                currentTargetX -= 24;
+                driveTrain.finalArrayPointInit++;
+                dpadLeft = true;
+            } else if (!gamepad1.dpad_left)
+                dpadLeft = false;
+
+
+            if(driveTrain.pathPoints[driveTrain.currentArrayPointWorking] == null){
+                InitialYComponent = gamepad1.left_stick_y;
+                InitialXComponent = gamepad1.left_stick_x;
+            } else {
+                if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX() > 0)
+                    InitialXComponent = 0.5;
+                else if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX() < 0)
+                    InitialXComponent = -0.5;
+                else
+                    InitialXComponent = 0;
+
+                if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY() > 0)
+                    InitialYComponent = 0.5;
+                else if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY() < 0)
+                    InitialYComponent = -0.5;
+                else
+                    InitialYComponent = 0;
+
+                if(Math.abs(driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX()) < 1
+                        && Math.abs(driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY()) < 1)
+                    driveTrain.currentArrayPointWorking++;
+            }
+            driveTrain.move(InitialYComponent, InitialXComponent, gamepad1.right_stick_x);
+            leftTics += gamepad1.right_stick_y;
+            rightTics += gamepad1.right_stick_y;
+            ails.zip(leftTics + leftOffset, rightTics + rightOffset);
+
 
 
             /*driveTrain.lw.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad1.right_stick_x);

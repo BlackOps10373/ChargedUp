@@ -26,6 +26,11 @@ import java.util.Arrays;
 
 public class DriveTrain {
 
+
+    public int currentArrayPointWorking = 0;
+    public int finalArrayPointInit = 0;
+    public Vector2D[] pathPoints = new Vector2D[1000];
+
     //DECLARATIONS OF ALL HARDWARE
     Telemetry telemetry;
     HardwareMap hardwareMap;
@@ -119,7 +124,6 @@ public class DriveTrain {
 
     public void updatePosition(){
         updateEncoders();
-
         deltaLeftEncoder = currentLeftEncoder - previousLeftEncoder;
         deltaRightEncoder = currentRightEncoder - previousRightEncoder;
         deltaCenterEncoder = currentCenterEncoder - previousCenterEncoder;
@@ -141,17 +145,16 @@ public class DriveTrain {
 
             deltax = turnRadius*(Math.cos(deltaHeading) - 1) + strafeRadius*Math.sin(deltaHeading);
             deltay = turnRadius*Math.sin(deltaHeading) + strafeRadius*(1 - Math.cos(deltaHeading));
-
         }
         x += encoderToInch(deltax);
         y += encoderToInch(deltay);
-        //encoderToFieldConversion(deltax, deltay);
-        //fieldCentricDelta = new Vector2D(encoderToInch(fieldDeltaX), encoderToInch(fieldDeltaY));
-        robotCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
 
+        robotCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
         fieldCentricDelta = new Vector2D(encoderToInch(deltax), encoderToInch(deltay));
         fieldCentricDelta.rotate(heading);
         position.add(fieldCentricDelta);
+        //encoderToFieldConversion(deltax, deltay);
+        //fieldCentricDelta = new Vector2D(encoderToInch(fieldDeltaX), encoderToInch(fieldDeltaY));
     }
 
     public void updateEncoders(){
@@ -353,16 +356,16 @@ public class DriveTrain {
         double YCoordinate = YComponent;
 
         double robotAngle = (getHeading());
-        double gamepadXControl = XCoordinate * Math.cos(-robotAngle) - YCoordinate * Math.sin(-robotAngle);
-        double gamepadYControl = YCoordinate * Math.cos(-robotAngle) + XCoordinate * Math.sin(-robotAngle);
+        double gamepadXControl = XCoordinate * Math.cos(robotAngle) - YCoordinate * Math.sin(robotAngle);
+        double gamepadYControl = YCoordinate * Math.cos(robotAngle) + XCoordinate * Math.sin(robotAngle);
 
         double XComponentPower = gamepadXControl / 1.5;
         double YComponentPower = gamepadYControl / 1.5;
         double RotateComponentPower = driveTurn / 1.5;
-        rw.setPower((YComponentPower - XComponentPower - RotateComponentPower));
-        brw.setPower((YComponentPower + XComponentPower - RotateComponentPower));
-        lw.setPower((YComponentPower + XComponentPower + RotateComponentPower));
-        blw.setPower((YComponentPower - XComponentPower + RotateComponentPower));
+        rw.setPower((YComponentPower + XComponentPower - RotateComponentPower));
+        brw.setPower((YComponentPower - XComponentPower - RotateComponentPower));
+        lw.setPower((YComponentPower - XComponentPower + RotateComponentPower));
+        blw.setPower((YComponentPower + XComponentPower + RotateComponentPower));
     }
 
     public void goToPosition(double YComponent, double XComponent, double speed, double preferredAngle) {
