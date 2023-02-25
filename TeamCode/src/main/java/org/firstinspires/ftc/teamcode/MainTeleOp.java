@@ -19,7 +19,7 @@ public class MainTeleOp extends LinearOpMode {
         double rightStickXBefore = 0;
         double rightStickXAfter = 0;
 
-        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
+        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap, DriveTrain.Alliance.Red);
         AILS ails = new AILS(telemetry,hardwareMap);
         int leftTics = 0;
         int rightTics = 0;

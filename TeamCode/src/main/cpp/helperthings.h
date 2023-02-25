@@ -19,12 +19,30 @@ struct weightedPoint
     }
 };
 
+struct Vector2D
+{
+    double x=0,y=0;
+};
+struct timeVector
+{
+    double time = 0;
+    double x=0,y=0;
+};
+
 
 double linearInterpolator(dPoint p1, dPoint p2, double xPosBetween)
 {
     double percentP2 = (xPosBetween - p1.time) / (p2.time - p1.time);
     return (percentP2 * p2.value + (1.0 - percentP2) * p1.value);
 }
+
+Vector2D linearInterpolator(timeVector p1, timeVector p2, double time)
+{
+    Vector2D ret = {};
+    ret.x = linearInterpolator(dPoint{p1.time,p1.x},dPoint{p2.time, p2.x}, time);
+    ret.y = linearInterpolator(dPoint{p1.time,p1.y},dPoint{p2.time, p2.y}, time);
+}
+
 
 double weightedInterpolator(weightedPoint p1, weightedPoint p2, double xPosBetween)
 {

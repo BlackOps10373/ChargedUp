@@ -235,7 +235,7 @@ public class ConceptVuforiaFieldNavigationWebcam extends LinearOpMode {
         float correcterMult = 0.1f;
         double lastTime = time;
         OpenGLMatrix LControl_stick_input = null;
-        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
+        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap, DriveTrain.Alliance.Red);
 
         //driveTrain.lw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //driveTrain.rw.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

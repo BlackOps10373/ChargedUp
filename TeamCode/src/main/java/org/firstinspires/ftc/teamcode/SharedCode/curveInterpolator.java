@@ -27,15 +27,19 @@ public class curveInterpolator {
             value = initY;
         }
     }
+    public weightedPoint createPoint(double initX, double initY, double initWeight)
+    {
+        return new weightedPoint(initX, initY, initWeight);
+    }
 
 
 
-    interface NextPointFunction
+    public interface NextPointFunction
     {
         weightedPoint run();
     }
 
-    interface  InterpolationFunction
+    public interface  InterpolationFunction
     {
         double run(weightedPoint prevPoint, weightedPoint nextPoint, double xPosBetween);
     }

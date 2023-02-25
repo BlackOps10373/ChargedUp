@@ -25,9 +25,9 @@
 
 #include "helperthings.h"
 
-bidirectionalVectorPiece<weightedPoint>* lastPlacedPoint = nullptr;
-BidirectionalVectorWithStartAndCheckpoint<weightedPoint>* pts = new BidirectionalVectorWithStartAndCheckpoint<weightedPoint>();
-
+bidirectionalVectorPiece<timeVector>* lastPlacedPoint = nullptr;
+BidirectionalVectorWithStartAndCheckpoint<timeVector>* pts = new BidirectionalVectorWithStartAndCheckpoint<timeVector>();
+#if 0
 char bytes[2000];
 
 std::fstream graphFile;
@@ -153,41 +153,41 @@ Java_org_firstinspires_ftc_teamcode_FileTest_testWrite(JNIEnv *env, jobject thiz
     return file.is_open();
 }
 
-
+#endif
 extern "C"
 JNIEXPORT void JNICALL
 Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_PlacePoint(JNIEnv *env, jobject thiz,
-                                                                       jdouble x, jdouble y) {
+                                                                       jdouble x, jdouble y, jdouble time) {
     //PlacePoint()
-    if (x < 0.0)
+    if (time < 0.0)
     {
-        x = 0.0;
+        time = 0.0;
     }
     pts->currentPiece = lastPlacedPoint;
 
 
     tryToPut:
-    if (x > pts->currentPiece->value.time)
+    if (time > pts->currentPiece->value.time)
     {
-        if (pts->willBeLastPiece() || x < pts->currentPiece->nextPiece->value.time)
+        if (pts->willBeLastPiece() || time < pts->currentPiece->nextPiece->value.time)
         {
-            pts->pushToNext(weightedPoint{x, y, 1});
+            pts->pushToNext(timeVector{time, x, y});
             lastPlacedPoint = pts->currentPiece;
             //FillMemory((continguousArrayOfPtsPointers + (int)retPlaced->value.time), (int)retPlaced->nextPiece->value.time - (int)retPlaced->value.time, (int)retPlaced);
             //continguousArrayOfPtsPointers[pt.x] = retPlaced;
         }
         else
-        if (x == pts->currentPiece->nextPiece->value.time)
+        if (time == pts->currentPiece->nextPiece->value.time)
         {
             // equal time to next piece
             pts->selectNext();
-            pts->currentPiece->value.value = y;
-            pts->currentPiece->value.weight = 1;
+            pts->currentPiece->value.x = x;
+            pts->currentPiece->value.y = y;
             lastPlacedPoint = pts->currentPiece;
             //pts->selectNext();
         }
         else
-        if (x > pts->currentPiece->nextPiece->value.time)
+        if (time > pts->currentPiece->nextPiece->value.time)
         {
             // goes past the next piece
             pts->selectNext();
@@ -195,30 +195,30 @@ Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_PlacePoint(JNIEnv *e
         }
     }
     else
-    if (x < pts->currentPiece->value.time)
+    if (time < pts->currentPiece->value.time)
     {
         //pts->setToStart();
         //goto tryToPut;
         // change this to do the thing above, but in reverse.
         if (pts->willBeFirstPiece() || x > pts->currentPiece->prevPiece->value.time)
         {
-            pts->pushToPrev(weightedPoint{x, y, 1});
+            pts->pushToPrev(timeVector{time, x, y});
             lastPlacedPoint = pts->currentPiece;
             //FillMemory((continguousArrayOfPtsPointers + (int)retPlaced->value.time), (int)retPlaced->nextPiece->value.time - (int)retPlaced->value.time, (int)retPlaced);
             //continguousArrayOfPtsPointers[pt.x] = retPlaced;
         }
         else
-        if (x == pts->currentPiece->prevPiece->value.time)
+        if (time == pts->currentPiece->prevPiece->value.time)
         {
             // equal time to prev piece
             pts->selectPrev();
-            pts->currentPiece->value.value = y;
-            pts->currentPiece->value.weight = 1;
+            pts->currentPiece->value.x = x;
+            pts->currentPiece->value.y = y;
             lastPlacedPoint = pts->currentPiece;
             //pts->selectPrev();
         }
         else
-        if (x < pts->currentPiece->prevPiece->value.time)
+        if (time < pts->currentPiece->prevPiece->value.time)
         {
             // goes past the prev piece
             pts->selectPrev();
@@ -228,11 +228,54 @@ Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_PlacePoint(JNIEnv *e
     else
     {
         // equal time to current piece
-        pts->currentPiece->value.value = y;
-        pts->currentPiece->value.weight = 1;
+        pts->currentPiece->value.x = x;
+        pts->currentPiece->value.y = y;
         lastPlacedPoint = pts->currentPiece;
         //pts->selectNext();
     }
     //return lastPlacedPoint;
     return;
+}
+
+Vector2D outPoint = {};
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getPoint(JNIEnv *env, jobject thiz,
+                                                                     jdouble time) {
+    // TODO: implement getPoint()
+    checkCurrentPiece:
+    if (time >= pts->currentPiece->value.time)
+    {
+        if (pts->currentPiece->nextPiece)
+        {
+            if (pts->currentPiece->nextPiece->value.time < time) {
+                pts->currentPiece = pts->currentPiece->nextPiece;
+                goto checkCurrentPiece;
+            }
+            outPoint = linearInterpolator(pts->currentPiece->value, pts->currentPiece->nextPiece->value, time);
+            return;
+        }
+        outPoint.x = pts->currentPiece->value.x;
+        outPoint.y = pts->currentPiece->value.y;
+    }
+    else if (time < pts->currentPiece->value.time)
+    {
+        pts->currentPiece = pts->currentPiece->prevPiece;
+        goto checkCurrentPiece;
+    }
+}
+
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getXOfPoint(JNIEnv *env, jobject thiz) {
+    // TODO: implement getXOfPoint()
+    return outPoint.x;
+}
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getYOfPoint(JNIEnv *env,
+                                                                         jobject thiz) {
+    // TODO: implement getYoOfPoint()
+    return outPoint.y;
 }

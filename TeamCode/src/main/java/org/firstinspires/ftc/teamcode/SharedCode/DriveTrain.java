@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Vector2D;
+import org.opencv.core.Mat;
 
 import java.util.Arrays;
 
@@ -80,11 +81,27 @@ public class DriveTrain {
     private double y = 0;
     private double theta = 0;
 
+    Viewfora viewfora = null;
 
+    Alliance alliance;
+
+    public enum Alliance
+    {
+        Red,
+        Blue
+    }
     // CONSTRUCTOR
-    public DriveTrain(Telemetry t,HardwareMap hM) {
+    public DriveTrain(Telemetry t,HardwareMap hM, Alliance _alliance) {
         telemetry = t;
         hardwareMap = hM;
+        alliance = _alliance;
+
+        if (alliance == Alliance.Red)
+        {
+            //heading = Math.PI;
+        }
+
+        viewfora = new Viewfora(telemetry, hardwareMap, alliance);
 
         initMotors();
         initIMU();
@@ -112,11 +129,12 @@ public class DriveTrain {
         previousCenterEncoder = currentCenterEncoder;
 
         deltaHeading = (deltaRightEncoder - deltaLeftEncoder) / (2.0 * RADIUS * ENCODER_TICS_PER_INCH);
-        heading = (currentRightEncoder - currentLeftEncoder) / (2.0 * RADIUS * ENCODER_TICS_PER_INCH);
+        //heading = (currentRightEncoder - currentLeftEncoder) / (2.0 * RADIUS * ENCODER_TICS_PER_INCH);
+        heading += deltaHeading;
 
         if(deltaHeading == 0){ //have to do it like this because java doesn't do l'Hopital's rule
             deltax = deltaCenterEncoder;
-            deltay = (deltaLeftEncoder + deltaRightEncoder)/2;
+            deltay = (deltaLeftEncoder + deltaRightEncoder)/2.0;
         }else{
             double turnRadius = RADIUS * ENCODER_TICS_PER_INCH * (deltaLeftEncoder + deltaRightEncoder) / (deltaRightEncoder - deltaLeftEncoder);
             double strafeRadius = deltaCenterEncoder / deltaHeading - CENTER_ENCODER_RADIUS * ENCODER_TICS_PER_INCH;
@@ -140,6 +158,22 @@ public class DriveTrain {
         currentLeftEncoder = -leftEncoderMotor.getCurrentPosition();
         currentRightEncoder = rightEncoderMotor.getCurrentPosition();
         currentCenterEncoder = -centerEncoderMotor.getCurrentPosition();
+    }
+
+    public boolean updateWithViewforia()
+    {
+        boolean ret = false;
+        refDouble newRotation = new refDouble(); // refDouble class is for getting java to use references for a double
+        newRotation.value = heading;
+        ret = viewfora.updatePosition(position, newRotation);
+        heading = newRotation.value;
+
+        return  ret;
+    }
+
+    public void endViewforia()
+    {
+        viewfora.DeactivateTargets();
     }
 
     public double encoderToInch(double encoder) {
@@ -315,25 +349,13 @@ public class DriveTrain {
     public void move(double YComponent, double XComponent, double Rotate) {
         double driveTurn = Rotate;
         double XCoordinate = XComponent;
-        double YCoordinate = -YComponent;
+        //double YCoordinate = -YComponent;
+        double YCoordinate = YComponent;
 
-        double gamepadHypot = Range.clip(Math.hypot(XCoordinate, YCoordinate), 0, 1);
-        double gamepadDegree = -(Math.toDegrees(Math.atan2(YCoordinate, XCoordinate)) - 90);
-        gamepadDegree = degreeCalc180(gamepadDegree);
-        //the inverse tangent of opposite/adjacent gives us our gamepad degree
-        double robotDegree = (degreeCalc180(-getHeading()*180));
-        //gives us the angle our robot is at
-        double movementDegree = gamepadDegree - robotDegree;
+        double robotAngle = (getHeading());
+        double gamepadXControl = XCoordinate * Math.cos(-robotAngle) - YCoordinate * Math.sin(-robotAngle);
+        double gamepadYControl = YCoordinate * Math.cos(-robotAngle) + XCoordinate * Math.sin(-robotAngle);
 
-        //adjust the angle we need to move at by finding needed movement degree based on gamepad and robot angles
-        double gamepadXControl = Math.sin(Math.toRadians(movementDegree)) * gamepadHypot;
-        //by finding the adjacent side, we can get our needed x value to power our motors
-        double gamepadYControl = Math.cos(Math.toRadians(movementDegree)) * gamepadHypot;
-        //by finding the opposite side, we can get our needed y value to power our motors
-        //rwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
-        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) + driveTurn) * speedAdjust;
-        //lwPower = (gamepadYControl * Math.abs(gamepadYControl) + gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
-        //brwPower = (gamepadYControl * Math.abs(gamepadYControl) - gamepadXControl * Math.abs(gamepadXControl) - driveTurn) * speedAdjust;
         double XComponentPower = gamepadXControl / 1.5;
         double YComponentPower = gamepadYControl / 1.5;
         double RotateComponentPower = driveTurn / 1.5;

@@ -11,7 +11,7 @@ public class NoStrafing extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap);
+        DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap, DriveTrain.Alliance.Red);
         driveTrain.initMotors();
 
         waitForStart();
