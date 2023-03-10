@@ -33,19 +33,17 @@ public class AILS {
             telemetry   = t;
 
             grabber = hardwareMap.get(Servo.class, "grabber");
-            grabber.setPosition(0.5);
+            grabber.setPosition(0.6);
 
             zipChainLeft  = hardwareMap.get(DcMotor.class, "zipChainLeft");
             zipChainLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            zipChainLeft.setTargetPosition(0);
-            zipChainLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            zipChainLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             zipChainLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             zipChainLeft.setDirection(DcMotor.Direction.FORWARD);
 
             zipChainRight   = hardwareMap.get(DcMotor.class, "zipChainRight");
             zipChainRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            zipChainRight.setTargetPosition(0);
-            zipChainRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            zipChainRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             zipChainRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             zipChainRight.setDirection(DcMotorSimple.Direction.REVERSE);
 

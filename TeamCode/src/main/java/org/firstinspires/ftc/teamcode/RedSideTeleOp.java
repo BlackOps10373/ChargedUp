@@ -68,9 +68,9 @@ public class RedSideTeleOp extends LinearOpMode {
                 }
             }
 
-            if (gamepad1.b)
+            if (gamepad2.b)
                 ails.grabber.setPosition(.6);
-            if (gamepad1.x)
+            if (gamepad2.a)
                 ails.grabber.setPosition(.5);
 
             if (gamepad1.dpad_up && !dpadUp) {
@@ -129,9 +129,18 @@ public class RedSideTeleOp extends LinearOpMode {
                     driveTrain.currentArrayPointWorking++;
             }
             driveTrain.move(InitialYComponent, InitialXComponent, gamepad1.right_stick_x);
-            leftTics += gamepad1.right_stick_y;
-            rightTics += gamepad1.right_stick_y;
-            ails.zip(leftTics + leftOffset, rightTics + rightOffset);
+            //leftTics += gamepad1.right_stick_y;
+            //rightTics += gamepad1.right_stick_y;
+            //ails.zip(leftTics + leftOffset, rightTics + rightOffset);
+
+
+            if ((ails.zipChainRight.getCurrentPosition() < 2720 && ails.zipChainLeft.getCurrentPosition() < 2720)) {
+                ails.zipChainLeft.setPower(gamepad2.right_stick_y * .75);
+                ails.zipChainRight.setPower(gamepad2.right_stick_y * .75);
+            } else {
+                ails.zipChainLeft.setPower(0);
+                ails.zipChainRight.setPower(0);
+            }
 
 
 

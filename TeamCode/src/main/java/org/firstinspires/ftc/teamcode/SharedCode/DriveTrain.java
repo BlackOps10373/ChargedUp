@@ -101,10 +101,7 @@ public class DriveTrain {
         hardwareMap = hM;
         alliance = _alliance;
 
-        if (alliance == Alliance.Red)
-        {
-            //heading = Math.PI;
-        }
+        heading = Math.PI;
 
         viewfora = new Viewfora(telemetry, hardwareMap, alliance);
 
@@ -355,7 +352,7 @@ public class DriveTrain {
         //double YCoordinate = -YComponent;
         double YCoordinate = YComponent;
 
-        double robotAngle = (getHeading());
+        double robotAngle = (getHeading() + (Math.PI / 2));
         double gamepadXControl = XCoordinate * Math.cos(robotAngle) - YCoordinate * Math.sin(robotAngle);
         double gamepadYControl = YCoordinate * Math.cos(robotAngle) + XCoordinate * Math.sin(robotAngle);
 
