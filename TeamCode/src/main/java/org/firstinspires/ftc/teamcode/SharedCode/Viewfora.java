@@ -179,7 +179,7 @@ public class Viewfora {
 
             OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                     .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 0, 0, 0))
+                    //.multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 0, 0, 0))
                     .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES,CAMERA_ROLL_ROTATION_DEG, 0, 0))
                     .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 90, 90, 0));
 
@@ -258,12 +258,12 @@ public class Viewfora {
                     {
                         case "Blue Rear Wall":
                         case "Red Rear Wall": {
-                            retRotation.value = rotation.thirdAngle + sign * (Math.PI / 2);
+                            retRotation.value = rotation.thirdAngle - sign * (Math.PI / 2);
                         }
                         break;
                         case "Blue Audience Wall":
                         case "Red Audience Wall": {
-                            retRotation.value = rotation.thirdAngle - sign * (Math.PI / 2);
+                            retRotation.value = rotation.thirdAngle + sign * (Math.PI / 2);
                         }
                         break;
                     }

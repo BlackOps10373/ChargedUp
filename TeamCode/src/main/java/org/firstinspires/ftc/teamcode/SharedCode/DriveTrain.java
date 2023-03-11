@@ -102,6 +102,10 @@ public class DriveTrain {
         alliance = _alliance;
 
         heading = Math.PI;
+        double[] pos = new double[2];
+        pos[0] = 24;
+        pos[1] = -5.25;
+        position.setComponents(pos);
 
         viewfora = new Viewfora(telemetry, hardwareMap, alliance);
 
@@ -363,17 +367,17 @@ public class DriveTrain {
             YComponent = 1;
         }
 
-        double robotAngle = (getHeading() + (Math.PI / 2));
+        double robotAngle = getHeading();
         double gamepadXControl = XCoordinate * Math.cos(robotAngle) - YCoordinate * Math.sin(robotAngle);
         double gamepadYControl = YCoordinate * Math.cos(robotAngle) + XCoordinate * Math.sin(robotAngle);
 
         double XComponentPower = gamepadXControl / 1.5;
         double YComponentPower = gamepadYControl / 1.5;
         double RotateComponentPower = driveTurn / 1.5;
-        rw.setPower((YComponentPower + XComponentPower - RotateComponentPower));
-        brw.setPower((YComponentPower - XComponentPower - RotateComponentPower));
-        lw.setPower((YComponentPower - XComponentPower + RotateComponentPower));
-        blw.setPower((YComponentPower + XComponentPower + RotateComponentPower));
+        rw.setPower((YComponentPower + XComponentPower + RotateComponentPower));
+        brw.setPower((YComponentPower - XComponentPower + RotateComponentPower));
+        lw.setPower((YComponentPower - XComponentPower - RotateComponentPower));
+        blw.setPower((YComponentPower + XComponentPower - RotateComponentPower));
     }
 
     public void goToPosition(double YComponent, double XComponent, double speed, double preferredAngle) {
