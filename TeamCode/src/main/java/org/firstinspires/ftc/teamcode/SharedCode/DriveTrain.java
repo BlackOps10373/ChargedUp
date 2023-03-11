@@ -424,15 +424,15 @@ public class DriveTrain {
         Vector2D ret = getPosition();
 
         double[] comp = ret.getComponents();
-        comp[0] = (double)((int)(comp[0] / 24) * 24) + 12;
-        comp[1] = (double)((int)(comp[1] / 24) * 24) + 12;
+        comp[0] = (double)((int)((comp[0] + 12) / 24) * 24);
+        comp[1] = (double)((int)((comp[1] + 12) / 24) * 24);
         ret.setComponents(comp);
         return ret;
     }
     public Vector2D getFieldTileCenter(double x, double y)
     {
-        x = (double)((int)(x / 24) * 24) + 12;
-        y = (double)((int)(y / 24) * 24) + 12;
+        x = (double)((int)((x + 12) / 24) * 24);
+        y = (double)((int)((y + 12) / 24) * 24);
         Vector2D ret = new Vector2D(x, y);
         return ret;
     }
