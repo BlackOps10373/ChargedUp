@@ -254,19 +254,8 @@ public class Viewfora {
                     newPosition[0] = sign * (translation.get(0) / mmPerInch) + (24 * 2.5);
                     newPosition[1] = sign * (translation.get(1) / mmPerInch) + (24 * 2.5);
                     retPosition.setComponents(newPosition);
-                    switch (trackingTrackable.getName())
-                    {
-                        case "Blue Rear Wall":
-                        case "Red Rear Wall": {
-                            retRotation.value = rotation.thirdAngle - sign * (Math.PI / 2);
-                        }
-                        break;
-                        case "Blue Audience Wall":
-                        case "Red Audience Wall": {
-                            retRotation.value = rotation.thirdAngle + sign * (Math.PI / 2);
-                        }
-                        break;
-                    }
+                    retRotation.value = rotation.thirdAngle + sign * (Math.PI / 2);
+
                 }
                 else {
                     //telemetry.addData("Visible Target", "none");
