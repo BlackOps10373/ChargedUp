@@ -23,6 +23,7 @@ public class RedSideTeleOp extends LinearOpMode {
         Button down = new Button();
         Button right = new Button();
         Button left = new Button();
+        Button bX = new Button();
 
         double InitialYComponent = 0;
         double InitialXComponent = 0;
@@ -136,7 +137,7 @@ public class RedSideTeleOp extends LinearOpMode {
                 graphManager.PlacePoint(pos[0] - 24, pos[1], Math.max(time, graphManager.getLastPointTime()) + 2);
             }
 
-            if (gamepad1.x)
+            if (bX.OnButtonDown(gamepad1.x))
             {
                 // get rid of all points:
                 graphManager.deleteAllPoints(driveTrain.getPosition().getComponent(0), driveTrain.getPosition().getComponent(1), time);
