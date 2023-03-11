@@ -352,6 +352,17 @@ public class DriveTrain {
         //double YCoordinate = -YComponent;
         double YCoordinate = YComponent;
 
+        if (Math.abs(XComponent) > 1)
+        {
+            YComponent *= 1.0 / XComponent;
+            XComponent = 1;
+        }
+        if (Math.abs(YComponent) > 1)
+        {
+            XComponent *= 1.0 / YComponent;
+            YComponent = 1;
+        }
+
         double robotAngle = (getHeading() + (Math.PI / 2));
         double gamepadXControl = XCoordinate * Math.cos(robotAngle) - YCoordinate * Math.sin(robotAngle);
         double gamepadYControl = YCoordinate * Math.cos(robotAngle) + XCoordinate * Math.sin(robotAngle);
@@ -402,6 +413,24 @@ public class DriveTrain {
         rw.setPower(YCoordinate - XCoordinate - driveTurn);
         blw.setPower(YCoordinate - XCoordinate + driveTurn);
         brw.setPower(YCoordinate + XCoordinate - driveTurn);
+    }
+
+    public Vector2D getFieldTileCenter()
+    {
+        Vector2D ret = getPosition();
+
+        double[] comp = ret.getComponents();
+        comp[0] = (double)((int)(comp[0] / 24) * 24) + 12;
+        comp[1] = (double)((int)(comp[1] / 24) * 24) + 12;
+        ret.setComponents(comp);
+        return ret;
+    }
+    public Vector2D getFieldTileCenter(double x, double y)
+    {
+        x = (double)((int)(x / 24) * 24) + 12;
+        y = (double)((int)(y / 24) * 24) + 12;
+        Vector2D ret = new Vector2D(x, y);
+        return ret;
     }
 
    public double getIMUHeading() {

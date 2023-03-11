@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.SharedCode.GraphManager;
 import org.firstinspires.ftc.teamcode.SharedCode.curveInterpolator;
 
 import org.firstinspires.ftc.teamcode.SharedCode.DriveTrain;
+import org.firstinspires.ftc.teamcode.SharedCode.Button;
 
 @TeleOp(name = "RedSideTeleOp", group = "TeleOp")
 public class RedSideTeleOp extends LinearOpMode {
@@ -16,11 +17,12 @@ public class RedSideTeleOp extends LinearOpMode {
     public void runOpMode() {
         DriveTrain driveTrain = new DriveTrain(telemetry, hardwareMap, DriveTrain.Alliance.Red);
         AILS ails = new AILS(telemetry, hardwareMap);
+        GraphManager graphManager = new GraphManager();
 
-        boolean dpadUp = false;
-        boolean dpadDown = false;
-        boolean dpadLeft = false;
-        boolean dpadRight = false;
+        Button up = new Button();
+        Button down = new Button();
+        Button right = new Button();
+        Button left = new Button();
 
         double InitialYComponent = 0;
         double InitialXComponent = 0;
@@ -73,60 +75,82 @@ public class RedSideTeleOp extends LinearOpMode {
             if (gamepad2.a)
                 ails.grabber.setPosition(.5);
 
-            if (gamepad1.dpad_up && !dpadUp) {
-                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX, currentTargetY + 24);
-                currentTargetY += 24;
-                driveTrain.finalArrayPointInit++;
-                dpadUp = true;
-            } else if (!gamepad1.dpad_up)
-                dpadUp = false;
 
-            if (gamepad1.dpad_down && !dpadDown) {
-                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX, currentTargetY - 24);
-                currentTargetY -= 24;
-                driveTrain.finalArrayPointInit++;
-                dpadDown = true;
-            } else if (!gamepad1.dpad_down)
-                dpadDown = false;
+            if (up.OnButtonDown(gamepad1.dpad_up))
+            {
+                double[] pos = null;
+                if (time > graphManager.getLastPointTime()) {
+                    pos = driveTrain.getFieldTileCenter().getComponents();
+                    graphManager.PlacePoint(pos[0], pos[1], time);
+                }
+                else
+                {
+                    graphManager.getPoint(graphManager.getLastPointTime());
+                    pos = driveTrain.getFieldTileCenter(graphManager.getXOfPoint(), graphManager.getYOfPoint()).getComponents();
+                }
+                graphManager.PlacePoint(pos[0], pos[1] + 24, Math.max(time, graphManager.getLastPointTime()) + 2);
+            }
 
-            if (gamepad1.dpad_right && !dpadRight) {
-                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX + 24, currentTargetY);
-                currentTargetX += 24;
-                driveTrain.finalArrayPointInit++;
-                dpadRight = true;
-            } else if (!gamepad1.dpad_right)
-                dpadRight = false;
+            if (down.OnButtonDown(gamepad1.dpad_down))
+            {
+                double[] pos = null;
+                if (time > graphManager.getLastPointTime()) {
+                    pos = driveTrain.getFieldTileCenter().getComponents();
+                    graphManager.PlacePoint(pos[0], pos[1], time);
+                }
+                else
+                {
+                    graphManager.getPoint(graphManager.getLastPointTime());
+                    pos = driveTrain.getFieldTileCenter(graphManager.getXOfPoint(), graphManager.getYOfPoint()).getComponents();
+                }
+                graphManager.PlacePoint(pos[0], pos[1] - 24, Math.max(time, graphManager.getLastPointTime()) + 2);
+            }
 
-            if (gamepad1.dpad_left && !dpadLeft) {
-                driveTrain.pathPoints[driveTrain.finalArrayPointInit] = new Vector2D(currentTargetX - 24, currentTargetY);
-                currentTargetX -= 24;
-                driveTrain.finalArrayPointInit++;
-                dpadLeft = true;
-            } else if (!gamepad1.dpad_left)
-                dpadLeft = false;
+            if (right.OnButtonDown(gamepad1.dpad_right))
+            {
+                double[] pos = null;
+                if (time > graphManager.getLastPointTime()) {
+                    pos = driveTrain.getFieldTileCenter().getComponents();
+                    graphManager.PlacePoint(pos[0], pos[1], time);
+                }
+                else
+                {
+                    graphManager.getPoint(graphManager.getLastPointTime());
+                    pos = driveTrain.getFieldTileCenter(graphManager.getXOfPoint(), graphManager.getYOfPoint()).getComponents();
+                }
+                graphManager.PlacePoint(pos[0] + 24, pos[1], Math.max(time, graphManager.getLastPointTime()) + 2);
+            }
 
+            if (left.OnButtonDown(gamepad1.dpad_left))
+            {
+                double[] pos = null;
+                if (time > graphManager.getLastPointTime()) {
+                    pos = driveTrain.getFieldTileCenter().getComponents();
+                    graphManager.PlacePoint(pos[0], pos[1], time);
+                }
+                else
+                {
+                    graphManager.getPoint(graphManager.getLastPointTime());
+                    pos = driveTrain.getFieldTileCenter(graphManager.getXOfPoint(), graphManager.getYOfPoint()).getComponents();
+                }
+                graphManager.PlacePoint(pos[0] - 24, pos[1], Math.max(time, graphManager.getLastPointTime()) + 2);
+            }
 
-            if(driveTrain.pathPoints[driveTrain.currentArrayPointWorking] == null){
+            if (gamepad1.x)
+            {
+                // get rid of all points:
+                graphManager.deleteAllPoints(driveTrain.getPosition().getComponent(0), driveTrain.getPosition().getComponent(1), time);
+            }
+
+            if (time > graphManager.getLastPointTime() || (gamepad1.right_bumper))
+            {
                 InitialYComponent = gamepad1.left_stick_y;
                 InitialXComponent = gamepad1.left_stick_x;
             } else {
-                if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX() > 0)
-                    InitialXComponent = 0.5;
-                else if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX() < 0)
-                    InitialXComponent = -0.5;
-                else
-                    InitialXComponent = 0;
-
-                if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY() > 0)
-                    InitialYComponent = 0.5;
-                else if (driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY() < 0)
-                    InitialYComponent = -0.5;
-                else
-                    InitialYComponent = 0;
-
-                if(Math.abs(driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(0) - driveTrain.getX()) < 1
-                        && Math.abs(driveTrain.pathPoints[driveTrain.currentArrayPointWorking].getComponent(1) - driveTrain.getY()) < 1)
-                    driveTrain.currentArrayPointWorking++;
+                graphManager.getPoint(time);
+                double[] robotPos = driveTrain.getPosition().getComponents();
+                InitialXComponent = (graphManager.getXOfPoint() - robotPos[0]) * 0.5;
+                InitialYComponent = (graphManager.getYOfPoint() - robotPos[1]) * 0.5;
             }
             driveTrain.move(InitialYComponent, InitialXComponent, gamepad1.right_stick_x);
             //leftTics += gamepad1.right_stick_y;

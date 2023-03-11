@@ -23,10 +23,10 @@
 
 
 
-#include "helperthings.h"
+#include "point.h"
 
-bidirectionalVectorPiece<timeVector>* lastPlacedPoint = nullptr;
-BidirectionalVectorWithStartAndCheckpoint<timeVector>* pts = new BidirectionalVectorWithStartAndCheckpoint<timeVector>();
+listPiece<Vector2D>* lastPlacedPoint = nullptr;
+listManager<Vector2D>* pts = new listManager<Vector2D>(Vector2D(12, 12), 0); // starts in the middle of tile 0,0
 #if 0
 char bytes[2000];
 
@@ -159,81 +159,7 @@ JNIEXPORT void JNICALL
 Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_PlacePoint(JNIEnv *env, jobject thiz,
                                                                        jdouble x, jdouble y, jdouble time) {
     //PlacePoint()
-    if (time < 0.0)
-    {
-        time = 0.0;
-    }
-    pts->currentPiece = lastPlacedPoint;
-
-
-    tryToPut:
-    if (time > pts->currentPiece->value.time)
-    {
-        if (pts->willBeLastPiece() || time < pts->currentPiece->nextPiece->value.time)
-        {
-            pts->pushToNext(timeVector{time, x, y});
-            lastPlacedPoint = pts->currentPiece;
-            //FillMemory((continguousArrayOfPtsPointers + (int)retPlaced->value.time), (int)retPlaced->nextPiece->value.time - (int)retPlaced->value.time, (int)retPlaced);
-            //continguousArrayOfPtsPointers[pt.x] = retPlaced;
-        }
-        else
-        if (time == pts->currentPiece->nextPiece->value.time)
-        {
-            // equal time to next piece
-            pts->selectNext();
-            pts->currentPiece->value.x = x;
-            pts->currentPiece->value.y = y;
-            lastPlacedPoint = pts->currentPiece;
-            //pts->selectNext();
-        }
-        else
-        if (time > pts->currentPiece->nextPiece->value.time)
-        {
-            // goes past the next piece
-            pts->selectNext();
-            goto tryToPut;
-        }
-    }
-    else
-    if (time < pts->currentPiece->value.time)
-    {
-        //pts->setToStart();
-        //goto tryToPut;
-        // change this to do the thing above, but in reverse.
-        if (pts->willBeFirstPiece() || x > pts->currentPiece->prevPiece->value.time)
-        {
-            pts->pushToPrev(timeVector{time, x, y});
-            lastPlacedPoint = pts->currentPiece;
-            //FillMemory((continguousArrayOfPtsPointers + (int)retPlaced->value.time), (int)retPlaced->nextPiece->value.time - (int)retPlaced->value.time, (int)retPlaced);
-            //continguousArrayOfPtsPointers[pt.x] = retPlaced;
-        }
-        else
-        if (time == pts->currentPiece->prevPiece->value.time)
-        {
-            // equal time to prev piece
-            pts->selectPrev();
-            pts->currentPiece->value.x = x;
-            pts->currentPiece->value.y = y;
-            lastPlacedPoint = pts->currentPiece;
-            //pts->selectPrev();
-        }
-        else
-        if (time < pts->currentPiece->prevPiece->value.time)
-        {
-            // goes past the prev piece
-            pts->selectPrev();
-            goto tryToPut;
-        }
-    }
-    else
-    {
-        // equal time to current piece
-        pts->currentPiece->value.x = x;
-        pts->currentPiece->value.y = y;
-        lastPlacedPoint = pts->currentPiece;
-        //pts->selectNext();
-    }
-    //return lastPlacedPoint;
+    pts->insertPoint(Vector2D(x, y), time);
     return;
 }
 
@@ -244,26 +170,7 @@ JNIEXPORT void JNICALL
 Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getPoint(JNIEnv *env, jobject thiz,
                                                                      jdouble time) {
     // TODO: implement getPoint()
-    checkCurrentPiece:
-    if (time >= pts->currentPiece->value.time)
-    {
-        if (pts->currentPiece->nextPiece)
-        {
-            if (pts->currentPiece->nextPiece->value.time < time) {
-                pts->currentPiece = pts->currentPiece->nextPiece;
-                goto checkCurrentPiece;
-            }
-            outPoint = linearInterpolator(pts->currentPiece->value, pts->currentPiece->nextPiece->value, time);
-            return;
-        }
-        outPoint.x = pts->currentPiece->value.x;
-        outPoint.y = pts->currentPiece->value.y;
-    }
-    else if (time < pts->currentPiece->value.time)
-    {
-        pts->currentPiece = pts->currentPiece->prevPiece;
-        goto checkCurrentPiece;
-    }
+    outPoint = pts->getPoint(time);
 }
 
 extern "C"
@@ -278,4 +185,25 @@ Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getYOfPoint(JNIEnv *
                                                                          jobject thiz) {
     // TODO: implement getYoOfPoint()
     return outPoint.y;
+}
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_getLastPointTime(JNIEnv *env,
+                                                                             jobject thiz) {
+    // TODO: implement getLastPointTime()
+    double ret = 0;
+    listPiece<Vector2D>* current = pts->getCurrentListPiece();
+    while (current->getNext()) // select the last point
+        current = current->getNext();
+    return current->time; // return its time
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_org_firstinspires_ftc_teamcode_SharedCode_GraphManager_deleteAllPoints(JNIEnv *env,
+                                                                            jobject thiz,
+                                                                            jdouble new_start_x,
+                                                                            jdouble new_start_y,
+                                                                            jdouble current_time) {
+    // TODO: implement deleteAllPoints()
+    pts->replaceList(Vector2D(new_start_x, new_start_y), current_time);
 }
